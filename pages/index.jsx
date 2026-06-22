@@ -18,6 +18,7 @@ export default function Home() {
   const [lightbox, setLightbox] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [logoutConfirm, setLogoutConfirm] = useState(false)
 
   const fileInputRef = useRef(null)
 
@@ -37,6 +38,7 @@ export default function Home() {
       if (e.key === 'Escape') {
         setLightbox(null)
         setDeleteConfirm(null)
+        setLogoutConfirm(false)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -121,6 +123,7 @@ export default function Home() {
     setIsAdmin(false)
     setAdminToken(null)
     setPassword('')
+    setLogoutConfirm(false)
   }
 
   async function handleDelete(photo) {
@@ -210,7 +213,7 @@ export default function Home() {
               {uploading ? '⏳' : '📷 Ajouter'}
             </button>
             <button
-              onClick={handleLogout}
+              onClick={() => setLogoutConfirm(true)}
               style={s.logoutBtn}
               title="Se déconnecter"
             >
@@ -256,6 +259,25 @@ export default function Home() {
           />
         )}
       </main>
+
+      {/* ── Logout confirmation ─────────────────────────────────────────── */}
+      {logoutConfirm && (
+        <div style={s.modalOverlay} onClick={() => setLogoutConfirm(false)}>
+          <div style={{ ...s.modalCard, maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: 8 }}>
+              <div style={{ fontSize: 48 }}>👋</div>
+              <h2 style={s.modalTitle}>Se déconnecter ?</h2>
+              <p style={{ color: '#888', fontSize: 14 }}>Vous devrez entrer le mot de passe pour revenir.</p>
+            </div>
+            <button onClick={handleLogout} style={s.dangerBtn}>
+              Oui, me déconnecter
+            </button>
+            <button onClick={() => setLogoutConfirm(false)} style={s.cancelBtn}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Delete confirmation ──────────────────────────────────────────── */}
       {deleteConfirm && (
@@ -316,13 +338,6 @@ export default function Home() {
             style={s.lightboxImg}
             onClick={(e) => e.stopPropagation()}
           />
-
-          <p style={s.lightboxDate}>
-            {new Date(lightbox.createdAt).toLocaleDateString('fr-FR', {
-              day: 'numeric', month: 'long', year: 'numeric',
-              hour: '2-digit', minute: '2-digit',
-            })}
-          </p>
         </div>
       )}
     </div>
