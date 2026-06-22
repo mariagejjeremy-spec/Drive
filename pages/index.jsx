@@ -192,7 +192,6 @@ export default function Home() {
           <div>
             <h1 style={s.headerTitle}>
               🍋 Notre Mariage
-              {isAdmin && <span style={s.adminBadge}>👑 Admin</span>}
             </h1>
             <p style={s.headerCount}>
               {photos.length} photo{photos.length !== 1 ? 's' : ''} partagée{photos.length !== 1 ? 's' : ''}
