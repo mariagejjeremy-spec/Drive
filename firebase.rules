@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Photos are written by the trusted Cloud Function (admin SDK). Client reads are allowed.
+    match /photos/{photoId} {
+      allow read: if true;
+      // Deny direct client writes to enforce server-side validation and quotas.
+      allow create, update, delete: if false;
+    }
+    // Optional: a collection to store per-user counters if you implement a cheaper quota mechanism
+    match /upload_counters/{docId} {
+      allow read: if false;
+      allow write: if false;
+    }
+  }
+}
+
+// Storage rules
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Public read for photos
+    match /photos/{allPaths=**} {
+      allow read: if true;
+      // Disallow client direct writes; uploads should go through the Cloud Function (admin SDK).
+      allow write: if false;
+    }
+  }
+}

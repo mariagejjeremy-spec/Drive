@@ -1,8 +1,5 @@
 import { useState } from 'react'
-import { storage, db } from '../lib/firebase'
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import Link from 'next/link'
+import { ensureAnonymousSignIn, auth } from '../lib/firebase'
 
 export default function UploadPage() {
   const [file, setFile] = useState(null)
@@ -16,24 +13,55 @@ export default function UploadPage() {
   const handleUpload = async (e) => {
     e.preventDefault()
     if (!file) return
-    const storageRef = ref(storage, `photos/${Date.now()}_${file.name}`)
-    const uploadTask = uploadBytesResumable(storageRef, file)
 
-    uploadTask.on('state_changed', (snapshot) => {
-      const prog = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-      setProgress(Math.round(prog))
-    }, (error) => {
-      setStatus('Erreur: ' + error.message)
-    }, async () => {
-      const url = await getDownloadURL(uploadTask.snapshot.ref)
-      await addDoc(collection(db, 'photos'), {
-        url,
-        createdAt: serverTimestamp(),
-      })
-      setStatus('Upload terminé')
-      setFile(null)
-      setProgress(0)
-    })
+    setStatus('Connexion...')
+    try {
+      const user = await ensureAnonymousSignIn()
+      if (!user) throw new Error('Impossible de s\'authentifier')
+      const token = await user.getIdToken()
+
+      setStatus('Envoi...')
+
+      const formData = new FormData()
+      formData.append('file', file, file.name)
+
+      const xhr = new XMLHttpRequest()
+      const uploadUrl = process.env.NEXT_PUBLIC_UPLOAD_URL
+      if (!uploadUrl) {
+        setStatus('Erreur: NEXT_PUBLIC_UPLOAD_URL non configuré')
+        return
+      }
+      xhr.open('POST', uploadUrl)
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token)
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100)
+          setProgress(percent)
+        }
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setStatus('Upload terminé')
+          setFile(null)
+          setProgress(0)
+        } else if (xhr.status === 429) {
+          setStatus('Quota dépassé: ' + xhr.responseText)
+        } else {
+          setStatus('Erreur: ' + xhr.responseText)
+        }
+      }
+
+      xhr.onerror = () => {
+        setStatus('Erreur réseau pendant l\'upload')
+      }
+
+      xhr.send(formData)
+    } catch (err) {
+      console.error(err)
+      setStatus('Erreur: ' + err.message)
+    }
   }
 
   return (
@@ -41,7 +69,6 @@ export default function UploadPage() {
       <div className="max-w-xl mx-auto bg-white p-6 rounded shadow">
         <header className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-medium">Uploader une photo</h2>
-          <Link href="/"><a className="text-sm text-blue-600">Retour</a></Link>
         </header>
 
         <form onSubmit={handleUpload}>
