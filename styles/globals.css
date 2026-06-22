@@ -23,21 +23,41 @@ body {
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
+  0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
+/* ── Photo grid ──────────────────────────────────────────────────────────── */
+.photo-grid {
+  columns: 3;
+  column-gap: 12px;
+}
+.photo-card-wrap {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+/* ── Desktop-only sidebar ────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .sidebar-desktop {
+    display: none !important;
+  }
+
+  /* login: hide left branding, show right card full-width over the bg */
   .login-left {
     display: none !important;
   }
   .login-right {
-    background: linear-gradient(160deg, #FEFAED 0%, #FDF0C0 40%, #F7D96B 100%) !important;
+    background: transparent !important;
   }
-}
 
-@media (max-width: 600px) {
-  .masonry-3col {
-    grid-template-columns: repeat(2, 1fr) !important;
+  /* 2-col grid on phones */
+  .photo-grid {
+    columns: 2;
+  }
+
+  /* smaller title */
+  .gallery-title {
+    font-size: 22px !important;
   }
 }

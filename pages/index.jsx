@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 
 const CATEGORIES = [
-  { id: 'all',          label: 'Toutes',       icon: '🖼️' },
-  { id: 'Cérémonie',    label: 'Cérémonie',    icon: '💒' },
-  { id: 'Réception',    label: 'Réception',    icon: '🥂' },
-  { id: 'Détails',      label: 'Détails',      icon: '🌸' },
-  { id: 'Moments Fun',  label: 'Moments Fun',  icon: '✨' },
-  { id: 'Autre',        label: 'Autre',        icon: '📷' },
+  { id: 'all',         label: 'Toutes' },
+  { id: 'Cérémonie',   label: 'Cérémonie' },
+  { id: 'Réception',   label: 'Réception' },
+  { id: 'Détails',     label: 'Détails' },
+  { id: 'Moments Fun', label: 'Moments Fun' },
+  { id: 'Autre',       label: 'Autre' },
 ]
 
 export default function Home() {
@@ -172,7 +172,7 @@ export default function Home() {
 
         {/* Right — frosted glass card */}
         <div className="login-right" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, padding: 24 }}>
-          <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.68)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', borderRadius: 28, padding: '52px 40px', boxShadow: '0 8px 48px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.7)' }}>
+          <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.38)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', borderRadius: 28, padding: '52px 40px', boxShadow: '0 8px 48px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.5)' }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
               <div style={{ fontSize: 52, marginBottom: 14, lineHeight: 1 }}>🍋</div>
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 8px' }}>Bienvenue</h2>
@@ -238,12 +238,12 @@ export default function Home() {
           <div style={sideCard}>
             <p style={sideTitle}>Notre Mariage</p>
             <div style={statRow}>
-              <span style={{ fontSize: 13, color: '#5A3E00' }}>📸 Photos</span>
+              <span style={{ fontSize: 13, color: '#5A3E00' }}>Photos</span>
               <span style={{ fontWeight: 700, color: '#C9960A', fontSize: 14 }}>{photos.length}</span>
             </div>
             {CATEGORIES.filter(c => c.id !== 'all').map(c => (
               <div key={c.id} style={statRow}>
-                <span style={{ fontSize: 12, color: '#7A5C20' }}>{c.icon} {c.label}</span>
+                <span style={{ fontSize: 12, color: '#7A5C20' }}>{c.label}</span>
                 <span style={{ fontSize: 12, color: '#A08040' }}>{countOf(c.id)}</span>
               </div>
             ))}
@@ -258,7 +258,7 @@ export default function Home() {
                 onClick={() => setSelectedCat(c.id)}
                 style={selectedCat === c.id ? activeCatRow : catRow}
               >
-                <span>{c.icon} {c.label}</span>
+                <span>{c.label}</span>
                 <span style={{ fontSize: 11, opacity: 0.7 }}>{countOf(c.id)}</span>
               </div>
             ))}
@@ -465,7 +465,7 @@ function UploadModal({ onClose, onSuccess }) {
             style={{ width: '100%', border: '1.5px solid #EAD080', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#2D1F00', background: '#FDFBF2', outline: 'none', cursor: 'pointer', fontFamily: "'Lato', sans-serif" }}
           >
             {CATEGORIES.filter(c => c.id !== 'all').map(c => (
-              <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+              <option key={c.id} value={c.id}>{c.label}</option>
             ))}
           </select>
         </div>
@@ -502,12 +502,10 @@ function UploadModal({ onClose, onSuccess }) {
 
 function MasonryGrid({ photos, isAdmin, onPhotoClick, onDeleteClick }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-      {[0, 1, 2].map(col => (
-        <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {photos.filter((_, i) => i % 3 === col).map(photo => (
-            <PhotoCard key={photo.id} photo={photo} isAdmin={isAdmin} onClick={() => onPhotoClick(photo)} onDelete={() => onDeleteClick(photo)} />
-          ))}
+    <div className="photo-grid">
+      {photos.map(photo => (
+        <div key={photo.id} className="photo-card-wrap">
+          <PhotoCard photo={photo} isAdmin={isAdmin} onClick={() => onPhotoClick(photo)} onDelete={() => onDeleteClick(photo)} />
         </div>
       ))}
     </div>
@@ -535,12 +533,10 @@ function PhotoCard({ photo, isAdmin, onClick, onDelete }) {
 
 function SkeletonGrid() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-      {[0, 1, 2].map(col => (
-        <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[180, 240, 160, 210].map((h, i) => (
-            <div key={i} style={{ borderRadius: 16, height: h, background: 'linear-gradient(90deg, #F5EDCC 25%, #F0E4A8 50%, #F5EDCC 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
-          ))}
+    <div className="photo-grid">
+      {[180, 240, 160, 210, 195, 230, 170, 250, 185].map((h, i) => (
+        <div key={i} className="photo-card-wrap">
+          <div style={{ borderRadius: 16, height: h, background: 'linear-gradient(90deg, #F5EDCC 25%, #F0E4A8 50%, #F5EDCC 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
         </div>
       ))}
     </div>
