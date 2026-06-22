@@ -27,6 +27,15 @@ body {
   100% { background-position: -200% 0; }
 }
 
+@media (max-width: 768px) {
+  .login-left {
+    display: none !important;
+  }
+  .login-right {
+    background: linear-gradient(160deg, #FEFAED 0%, #FDF0C0 40%, #F7D96B 100%) !important;
+  }
+}
+
 @media (max-width: 600px) {
   .masonry-3col {
     grid-template-columns: repeat(2, 1fr) !important;

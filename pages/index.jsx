@@ -156,27 +156,155 @@ export default function Home() {
   // ── Login screen ──────────────────────────────────────────────────────────
   if (!authed) {
     return (
-      <div style={s.loginBg}>
-        <div style={s.loginCard}>
-          <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <div style={{ fontSize: 64, marginBottom: 8 }}>🍋🍊🌿</div>
-            <h1 style={s.loginTitle}>Notre Mariage</h1>
-            <p style={s.loginSub}>Entrez le mot de passe pour accéder à la galerie</p>
+      <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Lato', sans-serif" }}>
+
+        {/* Left panel — branding */}
+        <div
+          className="login-left"
+          style={{
+            flex: '0 0 58%',
+            position: 'relative',
+            overflow: 'hidden',
+            background: 'linear-gradient(160deg, #FEFAED 0%, #FDF0C0 25%, #F5D96A 55%, #D4A827 85%, #B8860B 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '48px 56px',
+          }}
+        >
+          {/* Decorative circles */}
+          {[
+            { top: -120, right: -120, size: 400, opacity: 0.12 },
+            { bottom: -80, left: -80, size: 320, opacity: 0.1 },
+            { top: '35%', right: 60, size: 160, opacity: 0.08 },
+          ].map((c, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              top: c.top, bottom: c.bottom, left: c.left, right: c.right,
+              width: c.size, height: c.size, borderRadius: '50%',
+              background: 'white', opacity: c.opacity, pointerEvents: 'none',
+            }} />
+          ))}
+
+          {/* Top branding */}
+          <div style={{ position: 'relative' }}>
+            <p style={{
+              fontSize: 12, letterSpacing: 4, textTransform: 'uppercase',
+              color: 'rgba(90,60,0,0.6)', fontWeight: 700, margin: 0,
+            }}>
+              🍋 Notre Mariage &nbsp;·&nbsp; Souvenirs
+            </p>
           </div>
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setLoginError('') }}
-              placeholder="Mot de passe"
-              autoComplete="current-password"
-              style={s.loginInput}
-            />
-            {loginError && <p style={s.errorText}>{loginError}</p>}
-            <button type="submit" style={s.loginBtn}>
-              Accéder à la galerie →
-            </button>
-          </form>
+
+          {/* Main headline */}
+          <div style={{ position: 'relative' }}>
+            <h1 style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 54, lineHeight: 1.15,
+              color: '#3D2800', margin: '0 0 24px', fontWeight: 700,
+            }}>
+              <em style={{ color: '#8B6000', fontStyle: 'italic', display: 'block' }}>
+                Partagez la joie,
+              </em>
+              Partagez les<br />souvenirs
+            </h1>
+            <p style={{ color: 'rgba(80,55,0,0.65)', fontSize: 15, lineHeight: 1.8, maxWidth: 360, margin: 0 }}>
+              Uploadez vos photos de notre journée spéciale et aidez-nous à revivre chaque moment magique.
+            </p>
+          </div>
+
+          {/* Bottom features */}
+          <div style={{ position: 'relative', display: 'flex', gap: 36 }}>
+            {[
+              { icon: '📸', title: 'Uploadez', sub: 'Vos moments préférés' },
+              { icon: '💛', title: 'Revivez', sub: 'La journée ensemble' },
+              { icon: '📖', title: 'Notre album', sub: 'Tous les souvenirs' },
+            ].map((f) => (
+              <div key={f.title}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{f.icon}</div>
+                <p style={{ fontWeight: 700, color: '#3D2800', fontSize: 13, margin: '0 0 2px' }}>{f.title}</p>
+                <p style={{ color: 'rgba(80,55,0,0.55)', fontSize: 12, margin: 0 }}>{f.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right panel — login card */}
+        <div
+          className="login-right"
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#FDFBF5',
+            padding: 24,
+          }}
+        >
+          <div style={{
+            width: '100%', maxWidth: 380,
+            background: 'white', borderRadius: 24,
+            padding: '52px 40px',
+            boxShadow: '0 8px 48px rgba(180,140,0,0.1)',
+          }}>
+            {/* Top decoration */}
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+              <div style={{ fontSize: 52, marginBottom: 14, lineHeight: 1 }}>🍋</div>
+              <h2 style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 30, fontWeight: 700,
+                color: '#2D1F00', margin: '0 0 8px',
+              }}>
+                Bienvenue
+              </h2>
+              <p style={{
+                fontSize: 10, letterSpacing: 4, textTransform: 'uppercase',
+                color: '#C9960A', fontWeight: 700, margin: 0,
+              }}>
+                Partagez vos souvenirs
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setLoginError('') }}
+                placeholder="Mot de passe"
+                autoComplete="current-password"
+                style={{
+                  width: '100%', border: '1.5px solid #ECD98A', borderRadius: 12,
+                  padding: '14px 16px', fontSize: 15, outline: 'none',
+                  boxSizing: 'border-box', color: '#333', background: '#FDFBF2',
+                  fontFamily: "'Lato', sans-serif",
+                }}
+              />
+              {loginError && (
+                <p style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', margin: 0 }}>
+                  {loginError}
+                </p>
+              )}
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #D4A017 0%, #B8860B 100%)',
+                  color: 'white', border: 'none', borderRadius: 12,
+                  padding: '15px', fontSize: 15, fontWeight: 700,
+                  cursor: 'pointer', letterSpacing: 1,
+                  fontFamily: "'Lato', sans-serif",
+                  boxShadow: '0 4px 20px rgba(180,130,0,0.35)',
+                }}
+              >
+                Accéder
+              </button>
+            </form>
+
+            <p style={{ textAlign: 'center', color: '#C8B07A', fontSize: 12, marginTop: 28, margin: '28px 0 0' }}>
+              Réservé aux invités de notre mariage 🍊
+            </p>
+          </div>
         </div>
       </div>
     )
