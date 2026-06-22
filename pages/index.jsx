@@ -357,10 +357,10 @@ export default function Home() {
       {/* ── FAB upload button ─────────────────────────────────────────────── */}
       <button
         onClick={() => setShowUploadModal(true)}
-        style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 20, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '13px 22px 13px 16px', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 24px rgba(180,130,0,0.45)', display: 'flex', alignItems: 'center', gap: 10 }}
+        title="Ajouter des photos"
+        style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 20, background: 'linear-gradient(135deg, #D4A017, #B8860B)', border: 'none', borderRadius: '50%', width: 66, height: 66, cursor: 'pointer', boxShadow: '0 6px 24px rgba(180,130,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
       >
-        <img src="/lemon-camera.svg" alt="" style={{ height: 30, width: 'auto', display: 'block' }} />
-        Ajouter des photos
+        <img src="/lemon-camera.svg" alt="Ajouter des photos" style={{ height: 46, width: 46 }} />
       </button>
 
       {/* ── Upload modal ──────────────────────────────────────────────────── */}
@@ -600,7 +600,7 @@ function EmptyState({ onUpload, catName }) {
         <img
           src="/empty-camera.png"
           alt=""
-          style={{ width: 210, height: 'auto', display: 'block', margin: '0 auto 20px', mixBlendMode: 'multiply' }}
+          style={{ width: 210, height: 'auto', display: 'block', margin: '0 auto 20px' }}
         />
 
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700, color: '#2D1F00', margin: '0 0 10px', lineHeight: 1.25 }}>
