@@ -9,6 +9,15 @@ const CATEGORIES = [
   { id: 'Autre',       label: 'Autre' },
 ]
 
+const CAT_ICONS = {
+  all:           '/cat-all.png',
+  'Cérémonie':   '/cat-ceremonie.png',
+  'Réception':   '/cat-reception.png',
+  'Détails':     '/cat-details.png',
+  'Moments Fun': '/cat-moments.png',
+  'Autre':       '/cat-autre.png',
+}
+
 export default function Home() {
   const [authed, setAuthed]         = useState(null)
   const [password, setPassword]     = useState('')
@@ -26,6 +35,10 @@ export default function Home() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [deleting, setDeleting]         = useState(false)
   const [logoutConfirm, setLogoutConfirm] = useState(false)
+
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filterRect, setFilterRect] = useState(null)
+  const filterBtnRef = useRef(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -45,6 +58,7 @@ export default function Home() {
         setDeleteConfirm(null)
         setLogoutConfirm(false)
         setShowUploadModal(false)
+        setFilterOpen(false)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -266,36 +280,69 @@ export default function Home() {
         </div>
 
         {/* Main */}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: 'rgba(249,246,238,0.70)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'rgba(249,246,238,0.70)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
 
-          {/* Main header */}
-          <div style={{ padding: '28px 28px 16px' }}>
-            <h1 className="gallery-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Wedding Memories ♡
-            </h1>
-            <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 15, color: '#C9960A', margin: '0 0 6px' }}>
-              Revivez la joie. Partagez l'amour.
-            </p>
-            <p style={{ fontSize: 13, color: '#A08040', margin: 0 }}>
-              Une collection de beaux moments partagés par nos invités.
-            </p>
-          </div>
+          {/* Non-scrolling header */}
+          <div style={{ flexShrink: 0 }}>
 
-          {/* Category tabs */}
-          <div style={{ paddingLeft: 28, paddingRight: 28, display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, flexShrink: 0 }}>
-            {CATEGORIES.map(c => (
+            {/* Title */}
+            <div style={{ padding: '28px 28px 12px' }}>
+              <h1 className="gallery-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Wedding Memories ♡
+              </h1>
+              <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 15, color: '#C9960A', margin: '0 0 6px' }}>
+                Revivez la joie. Partagez l'amour.
+              </p>
+              <p style={{ fontSize: 13, color: '#A08040', margin: 0 }}>
+                Une collection de beaux moments partagés par nos invités.
+              </p>
+            </div>
+
+            {/* Filter pill */}
+            <div style={{ padding: '0 28px 16px' }}>
               <button
-                key={c.id}
-                onClick={() => setSelectedCat(c.id)}
-                style={selectedCat === c.id ? activeTab : inactiveTab}
+                ref={filterBtnRef}
+                onClick={() => {
+                  if (!filterOpen && filterBtnRef.current) {
+                    const r = filterBtnRef.current.getBoundingClientRect()
+                    setFilterRect({ top: r.bottom + 8, left: r.left })
+                  }
+                  setFilterOpen(v => !v)
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'white', border: '2px solid #EAD080', borderRadius: 50, padding: '7px 18px 7px 7px', cursor: 'pointer', boxShadow: '0 2px 16px rgba(180,140,0,0.15)', fontFamily: "'Lato', sans-serif" }}
               >
-                {c.label} ({countOf(c.id)})
+                <img src={CAT_ICONS[selectedCat]} alt="" style={{ height: 46, width: 46, objectFit: 'contain', mixBlendMode: 'multiply' }} />
+                <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 600, color: '#2D1F00', minWidth: 60 }}>
+                  {selectedCat === 'all' ? 'Filtrer' : CATEGORIES.find(c => c.id === selectedCat)?.label}
+                </span>
+                <span style={{ color: '#C9960A', fontSize: 11, display: 'inline-block', transform: filterOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', marginLeft: 4 }}>▼</span>
               </button>
-            ))}
+
+              {filterOpen && filterRect && (
+                <>
+                  <div style={{ position: 'fixed', inset: 0, zIndex: 35 }} onClick={() => setFilterOpen(false)} />
+                  <div style={{ position: 'fixed', top: filterRect.top, left: filterRect.left, zIndex: 36, background: 'white', border: '2px solid #EAD080', borderRadius: 20, boxShadow: '0 8px 32px rgba(180,140,0,0.18)', minWidth: 240, overflow: 'hidden' }}>
+                    {CATEGORIES.map((c, i) => (
+                      <div
+                        key={c.id}
+                        onClick={() => { setSelectedCat(c.id); setFilterOpen(false) }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', cursor: 'pointer', background: selectedCat === c.id ? '#FFFAEC' : 'white', borderBottom: i < CATEGORIES.length - 1 ? '1px solid #F5EDD0' : 'none' }}
+                      >
+                        <img src={CAT_ICONS[c.id]} alt="" style={{ height: 40, width: 40, objectFit: 'contain', flexShrink: 0, mixBlendMode: 'multiply' }} />
+                        <span style={{ flex: 1, fontSize: 15, color: '#2D1F00', fontWeight: selectedCat === c.id ? 700 : 400 }}>
+                          {c.id === 'all' ? 'Toutes les photos' : c.label}
+                        </span>
+                        {selectedCat === c.id && <span style={{ color: '#D4A017', fontSize: 16, fontWeight: 700 }}>✓</span>}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          {/* Photos */}
-          <div style={{ padding: '16px 28px 32px' }}>
+          {/* Scrollable photos */}
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 28px 100px' }}>
             {loadingPhotos ? (
               <SkeletonGrid />
             ) : filtered.length === 0 ? (
@@ -553,7 +600,7 @@ function EmptyState({ onUpload, catName }) {
         <img
           src="/empty-camera.png"
           alt=""
-          style={{ width: 200, height: 'auto', display: 'block', margin: '0 auto 20px' }}
+          style={{ width: 210, height: 'auto', display: 'block', margin: '0 auto 20px', mixBlendMode: 'multiply' }}
         />
 
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700, color: '#2D1F00', margin: '0 0 10px', lineHeight: 1.25 }}>
@@ -565,7 +612,7 @@ function EmptyState({ onUpload, catName }) {
         </p>
 
         <button onClick={onUpload} style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '14px 24px', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-          ⬆ Ajouter des photos
+          Ajouter des photos
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -575,7 +622,7 @@ function EmptyState({ onUpload, catName }) {
         </div>
 
         <button onClick={onUpload} style={{ width: '100%', background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 50, padding: '12px 24px', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          📷 Importer depuis mon appareil
+          Importer depuis mon appareil
         </button>
 
       </div>
