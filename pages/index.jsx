@@ -545,16 +545,40 @@ function SkeletonGrid() {
 }
 
 function EmptyState({ onUpload, catName }) {
+  const isFiltered = catName && catName !== 'Toutes'
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 60, textAlign: 'center' }}>
-      <div style={{ fontSize: 64, marginBottom: 16 }}>📸</div>
-      <p style={{ fontSize: 18, fontWeight: 600, color: '#5A3E00', margin: '0 0 6px' }}>
-        {catName && catName !== 'Toutes' ? `Aucune photo dans "${catName}"` : 'Aucune photo pour l\'instant'}
-      </p>
-      <p style={{ color: '#A08040', marginBottom: 24 }}>Soyez le premier à partager un souvenir !</p>
-      <button onClick={onUpload} style={{ background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '14px 32px', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)' }}>
-        Ajouter la première photo 📷
-      </button>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, padding: '32px 16px', textAlign: 'center' }}>
+      <div style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRadius: 32, padding: '36px 36px 32px', maxWidth: 360, width: '100%', boxShadow: '0 4px 28px rgba(180,140,0,0.12)', border: '1px solid rgba(234,216,138,0.5)' }}>
+
+        <img
+          src="/empty-camera.png"
+          alt=""
+          style={{ width: 200, height: 'auto', display: 'block', margin: '0 auto 20px' }}
+        />
+
+        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700, color: '#2D1F00', margin: '0 0 10px', lineHeight: 1.25 }}>
+          {isFiltered ? `Aucune photo dans "${catName}"` : "Aucune photo pour l'instant"}
+        </h2>
+
+        <p style={{ fontSize: 14, color: '#A08040', margin: '0 0 26px', lineHeight: 1.65 }}>
+          Soyez la première personne à partager<br />un souvenir de notre mariage.
+        </p>
+
+        <button onClick={onUpload} style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '14px 24px', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+          ⬆ Ajouter des photos
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+          <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
+          <span style={{ fontSize: 13, color: '#C0A060' }}>ou</span>
+          <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
+        </div>
+
+        <button onClick={onUpload} style={{ width: '100%', background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 50, padding: '12px 24px', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          📷 Importer depuis mon appareil
+        </button>
+
+      </div>
     </div>
   )
 }
