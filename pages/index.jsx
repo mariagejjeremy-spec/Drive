@@ -269,24 +269,16 @@ export default function Home() {
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: 'rgba(249,246,238,0.70)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
 
           {/* Main header */}
-          <div style={{ padding: '28px 28px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-            <div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px' }}>
-                Wedding Memories ♡
-              </h1>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 15, color: '#C9960A', margin: '0 0 6px' }}>
-                Revivez la joie. Partagez l'amour.
-              </p>
-              <p style={{ fontSize: 13, color: '#A08040', margin: 0 }}>
-                Une collection de beaux moments partagés par nos invités.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowUploadModal(true)}
-              style={{ flexShrink: 0, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 10, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', whiteSpace: 'nowrap' }}
-            >
-              ⬆ Ajouter des photos
-            </button>
+          <div style={{ padding: '28px 28px 16px' }}>
+            <h1 className="gallery-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Wedding Memories ♡
+            </h1>
+            <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 15, color: '#C9960A', margin: '0 0 6px' }}>
+              Revivez la joie. Partagez l'amour.
+            </p>
+            <p style={{ fontSize: 13, color: '#A08040', margin: 0 }}>
+              Une collection de beaux moments partagés par nos invités.
+            </p>
           </div>
 
           {/* Category tabs */}
@@ -314,6 +306,15 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* ── FAB upload button ─────────────────────────────────────────────── */}
+      <button
+        onClick={() => setShowUploadModal(true)}
+        style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 20, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '13px 22px 13px 16px', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 24px rgba(180,130,0,0.45)', display: 'flex', alignItems: 'center', gap: 10 }}
+      >
+        <img src="/lemon-camera.svg" alt="" style={{ height: 30, width: 'auto', display: 'block' }} />
+        Ajouter des photos
+      </button>
 
       {/* ── Upload modal ──────────────────────────────────────────────────── */}
       {showUploadModal && (
