@@ -21,11 +21,12 @@ export default async function handler(req, res) {
       .expression('folder:wedding-photos')
       .sort_by('created_at', 'desc')
       .max_results(500)
-      .with_field('context')
+      .with_field('tags')
       .execute()
 
     const photos = result.resources.map((r) => ({
       id: r.public_id,
+      category: r.tags?.[0] || 'Autre',
       thumbUrl: cld.url(r.public_id, {
         secure: true,
         transformation: [{ width: 600, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],

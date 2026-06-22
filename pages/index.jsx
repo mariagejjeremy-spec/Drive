@@ -1,30 +1,35 @@
 import { useState, useEffect, useRef } from 'react'
 
-export default function Home() {
-  const [authed, setAuthed] = useState(null)
-  const [password, setPassword] = useState('')
-  const [loginError, setLoginError] = useState('')
+const CATEGORIES = [
+  { id: 'all',          label: 'Toutes',       icon: '🖼️' },
+  { id: 'Cérémonie',    label: 'Cérémonie',    icon: '💒' },
+  { id: 'Réception',    label: 'Réception',    icon: '🥂' },
+  { id: 'Détails',      label: 'Détails',      icon: '🌸' },
+  { id: 'Moments Fun',  label: 'Moments Fun',  icon: '✨' },
+  { id: 'Autre',        label: 'Autre',        icon: '📷' },
+]
 
-  const [isAdmin, setIsAdmin] = useState(false)
+export default function Home() {
+  const [authed, setAuthed]         = useState(null)
+  const [password, setPassword]     = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [isAdmin, setIsAdmin]       = useState(false)
   const [adminToken, setAdminToken] = useState(null)
 
-  const [photos, setPhotos] = useState([])
+  const [photos, setPhotos]               = useState([])
   const [loadingPhotos, setLoadingPhotos] = useState(false)
+  const [selectedCat, setSelectedCat]     = useState('all')
 
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadError, setUploadError] = useState('')
+  const [showUploadModal, setShowUploadModal] = useState(false)
 
-  const [lightbox, setLightbox] = useState(null)
+  const [lightbox, setLightbox]         = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
-  const [deleting, setDeleting] = useState(false)
+  const [deleting, setDeleting]         = useState(false)
   const [logoutConfirm, setLogoutConfirm] = useState(false)
-
-  const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const ok = localStorage.getItem('w_auth') === '1'
+    const ok    = localStorage.getItem('w_auth') === '1'
     const admin = localStorage.getItem('w_admin') === '1'
     const token = localStorage.getItem('w_admin_token') || null
     setAuthed(ok)
@@ -39,6 +44,7 @@ export default function Home() {
         setLightbox(null)
         setDeleteConfirm(null)
         setLogoutConfirm(false)
+        setShowUploadModal(false)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -48,20 +54,17 @@ export default function Home() {
   async function loadPhotos() {
     setLoadingPhotos(true)
     try {
-      const res = await fetch('/api/photos')
+      const res  = await fetch('/api/photos')
       const data = await res.json()
       setPhotos(data.photos || [])
-    } catch {
-      // silent
-    } finally {
-      setLoadingPhotos(false)
-    }
+    } catch { /* silent */ }
+    finally { setLoadingPhotos(false) }
   }
 
   async function handleLogin(e) {
     e.preventDefault()
     setLoginError('')
-    const res = await fetch('/api/auth', {
+    const res  = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
@@ -82,40 +85,7 @@ export default function Home() {
     }
   }
 
-  function handleFileChange(e) {
-    const file = e.target.files[0]
-    e.target.value = ''
-    if (!file) return
-
-    setUploading(true)
-    setUploadProgress(0)
-    setUploadError('')
-
-    const fd = new FormData()
-    fd.append('file', file)
-
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/upload')
-    xhr.upload.onprogress = (ev) => {
-      if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100))
-    }
-    xhr.onload = () => {
-      setUploading(false)
-      setUploadProgress(0)
-      if (xhr.status < 300) {
-        loadPhotos()
-      } else {
-        setUploadError("Erreur lors de l'upload. Réessayez.")
-      }
-    }
-    xhr.onerror = () => {
-      setUploading(false)
-      setUploadError('Erreur réseau. Réessayez.')
-    }
-    xhr.send(fd)
-  }
-
-  function handleLogout() {
+  function doLogout() {
     localStorage.removeItem('w_auth')
     localStorage.removeItem('w_admin')
     localStorage.removeItem('w_admin_token')
@@ -135,7 +105,7 @@ export default function Home() {
         body: JSON.stringify({ publicId: photo.id, adminToken }),
       })
       if (res.ok) {
-        setPhotos((prev) => prev.filter((p) => p.id !== photo.id))
+        setPhotos(prev => prev.filter(p => p.id !== photo.id))
         setLightbox(null)
       }
     } finally {
@@ -144,68 +114,40 @@ export default function Home() {
     }
   }
 
-  // ── Loading splash ────────────────────────────────────────────────────────
+  const filtered   = selectedCat === 'all' ? photos : photos.filter(p => p.category === selectedCat)
+  const countOf    = id => id === 'all' ? photos.length : photos.filter(p => p.category === id).length
+
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (authed === null) {
     return (
-      <div style={s.loadingWrap}>
-        <div style={s.loadingEmoji}>🍋</div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F6EE' }}>
+        <div style={{ fontSize: 56, animation: 'spin 1.5s linear infinite' }}>🍋</div>
       </div>
     )
   }
 
-  // ── Login screen ──────────────────────────────────────────────────────────
+  // ── Login ─────────────────────────────────────────────────────────────────
   if (!authed) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Lato', sans-serif" }}>
+      <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Lato', sans-serif", position: 'relative', backgroundImage: "url('/login-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        {/* Global light overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,250,220,0.25)', pointerEvents: 'none' }} />
 
-        {/* Left panel — branding */}
-        <div
-          className="login-left"
-          style={{
-            flex: '0 0 58%',
-            position: 'relative',
-            overflow: 'hidden',
-            background: 'linear-gradient(160deg, #FEFAED 0%, #FDF0C0 25%, #F5D96A 55%, #D4A827 85%, #B8860B 100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '48px 56px',
-          }}
-        >
-          {/* Decorative circles */}
-          {[
-            { top: -120, right: -120, size: 400, opacity: 0.12 },
-            { bottom: -80, left: -80, size: 320, opacity: 0.1 },
-            { top: '35%', right: 60, size: 160, opacity: 0.08 },
-          ].map((c, i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              top: c.top, bottom: c.bottom, left: c.left, right: c.right,
-              width: c.size, height: c.size, borderRadius: '50%',
-              background: 'white', opacity: c.opacity, pointerEvents: 'none',
-            }} />
-          ))}
+        {/* Left — branding */}
+        <div className="login-left" style={{
+          flex: '0 0 58%', position: 'relative', zIndex: 1,
+          display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '48px 56px',
+        }}>
+          {/* subtle dark overlay so text stays readable */}
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(60,35,0,0.18)', pointerEvents: 'none' }} />
 
-          {/* Top branding */}
+          <p style={{ position: 'relative', fontSize: 12, letterSpacing: 4, textTransform: 'uppercase', color: 'rgba(90,60,0,0.6)', fontWeight: 700, margin: 0 }}>
+            🍋 Notre Mariage &nbsp;·&nbsp; Souvenirs
+          </p>
+
           <div style={{ position: 'relative' }}>
-            <p style={{
-              fontSize: 12, letterSpacing: 4, textTransform: 'uppercase',
-              color: 'rgba(90,60,0,0.6)', fontWeight: 700, margin: 0,
-            }}>
-              🍋 Notre Mariage &nbsp;·&nbsp; Souvenirs
-            </p>
-          </div>
-
-          {/* Main headline */}
-          <div style={{ position: 'relative' }}>
-            <h1 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 54, lineHeight: 1.15,
-              color: '#3D2800', margin: '0 0 24px', fontWeight: 700,
-            }}>
-              <em style={{ color: '#8B6000', fontStyle: 'italic', display: 'block' }}>
-                Partagez la joie,
-              </em>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 54, lineHeight: 1.15, color: '#3D2800', margin: '0 0 24px', fontWeight: 700 }}>
+              <em style={{ color: '#8B6000', fontStyle: 'italic', display: 'block' }}>Partagez la joie,</em>
               Partagez les<br />souvenirs
             </h1>
             <p style={{ color: 'rgba(80,55,0,0.65)', fontSize: 15, lineHeight: 1.8, maxWidth: 360, margin: 0 }}>
@@ -213,13 +155,12 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Bottom features */}
           <div style={{ position: 'relative', display: 'flex', gap: 36 }}>
             {[
-              { icon: '📸', title: 'Uploadez', sub: 'Vos moments préférés' },
-              { icon: '💛', title: 'Revivez', sub: 'La journée ensemble' },
+              { icon: '📸', title: 'Uploadez',    sub: 'Vos moments préférés' },
+              { icon: '💛', title: 'Revivez',     sub: 'La journée ensemble' },
               { icon: '📖', title: 'Notre album', sub: 'Tous les souvenirs' },
-            ].map((f) => (
+            ].map(f => (
               <div key={f.title}>
                 <div style={{ fontSize: 22, marginBottom: 6 }}>{f.icon}</div>
                 <p style={{ fontWeight: 700, color: '#3D2800', fontSize: 13, margin: '0 0 2px' }}>{f.title}</p>
@@ -229,79 +170,29 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right panel — login card */}
-        <div
-          className="login-right"
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#FDFBF5',
-            padding: 24,
-          }}
-        >
-          <div style={{
-            width: '100%', maxWidth: 380,
-            background: 'white', borderRadius: 24,
-            padding: '52px 40px',
-            boxShadow: '0 8px 48px rgba(180,140,0,0.1)',
-          }}>
-            {/* Top decoration */}
+        {/* Right — frosted glass card */}
+        <div className="login-right" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, padding: 24 }}>
+          <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.68)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', borderRadius: 28, padding: '52px 40px', boxShadow: '0 8px 48px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.7)' }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
               <div style={{ fontSize: 52, marginBottom: 14, lineHeight: 1 }}>🍋</div>
-              <h2 style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 30, fontWeight: 700,
-                color: '#2D1F00', margin: '0 0 8px',
-              }}>
-                Bienvenue
-              </h2>
-              <p style={{
-                fontSize: 10, letterSpacing: 4, textTransform: 'uppercase',
-                color: '#C9960A', fontWeight: 700, margin: 0,
-              }}>
-                Partagez vos souvenirs
-              </p>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 8px' }}>Bienvenue</h2>
+              <p style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#C9960A', fontWeight: 700, margin: 0 }}>Partagez vos souvenirs</p>
             </div>
-
-            {/* Form */}
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <input
                 type="password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setLoginError('') }}
+                onChange={e => { setPassword(e.target.value); setLoginError('') }}
                 placeholder="Mot de passe"
                 autoComplete="current-password"
-                style={{
-                  width: '100%', border: '1.5px solid #ECD98A', borderRadius: 12,
-                  padding: '14px 16px', fontSize: 15, outline: 'none',
-                  boxSizing: 'border-box', color: '#333', background: '#FDFBF2',
-                  fontFamily: "'Lato', sans-serif",
-                }}
+                style={{ width: '100%', border: '1.5px solid #ECD98A', borderRadius: 12, padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box', color: '#333', background: '#FDFBF2', fontFamily: "'Lato', sans-serif" }}
               />
-              {loginError && (
-                <p style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', margin: 0 }}>
-                  {loginError}
-                </p>
-              )}
-              <button
-                type="submit"
-                style={{
-                  width: '100%',
-                  background: 'linear-gradient(135deg, #D4A017 0%, #B8860B 100%)',
-                  color: 'white', border: 'none', borderRadius: 12,
-                  padding: '15px', fontSize: 15, fontWeight: 700,
-                  cursor: 'pointer', letterSpacing: 1,
-                  fontFamily: "'Lato', sans-serif",
-                  boxShadow: '0 4px 20px rgba(180,130,0,0.35)',
-                }}
-              >
+              {loginError && <p style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', margin: 0 }}>{loginError}</p>}
+              <button type="submit" style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017 0%, #B8860B 100%)', color: 'white', border: 'none', borderRadius: 12, padding: '15px', fontSize: 15, fontWeight: 700, cursor: 'pointer', letterSpacing: 1, fontFamily: "'Lato', sans-serif", boxShadow: '0 4px 20px rgba(180,130,0,0.35)' }}>
                 Accéder
               </button>
             </form>
-
-            <p style={{ textAlign: 'center', color: '#C8B07A', fontSize: 12, marginTop: 28, margin: '28px 0 0' }}>
+            <p style={{ textAlign: 'center', color: '#C8B07A', fontSize: 12, margin: '28px 0 0' }}>
               Réservé aux invités de notre mariage 🍊
             </p>
           </div>
@@ -312,183 +203,311 @@ export default function Home() {
 
   // ── Gallery ───────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#FFFDE7' }}>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Lato', sans-serif", overflow: 'hidden', backgroundImage: "url('/gallery-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundAttachment: 'fixed' }}>
 
-      {/* Header */}
-      <header style={s.header}>
-        <div style={s.headerInner}>
+      {/* ── Top bar ───────────────────────────────────────────────────────── */}
+      <div style={{ flex: 'none', height: 56, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: '1px solid #EAD88A', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 26 }}>🍋</span>
           <div>
-            <h1 style={s.headerTitle}>
-              🍋 Notre Mariage
-            </h1>
-            <p style={s.headerCount}>
-              {photos.length} photo{photos.length !== 1 ? 's' : ''} partagée{photos.length !== 1 ? 's' : ''}
-            </p>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: '#2D1F00', lineHeight: 1.1 }}>Notre Mariage</div>
+            <div style={{ fontSize: 9, letterSpacing: 3, color: '#C9960A', fontWeight: 700, textTransform: 'uppercase' }}>WEDDING MEMORIES</div>
+          </div>
+        </div>
+        <button onClick={() => setLogoutConfirm(true)} style={{ background: 'none', border: 'none', color: '#A08040', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          ↪ Se déconnecter
+        </button>
+      </div>
+
+      {/* ── Body ──────────────────────────────────────────────────────────── */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+
+        {/* Sidebar */}
+        <div className="sidebar-desktop" style={{ width: 230, flexShrink: 0, background: 'rgba(250,247,238,0.80)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRight: '1px solid rgba(234,216,138,0.6)', overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+          {/* Welcome */}
+          <div style={sideCard}>
+            <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+              <div style={{ fontSize: 36 }}>💛</div>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 700, color: '#2D1F00', margin: '8px 0 4px' }}>Bienvenue !</h3>
+              <p style={{ fontSize: 12, color: '#A08040', margin: 0, lineHeight: 1.5 }}>Merci de partager ces beaux souvenirs.</p>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {uploading && (
-              <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>
-                {uploadProgress}%
-              </span>
+          {/* Stats */}
+          <div style={sideCard}>
+            <p style={sideTitle}>Notre Mariage</p>
+            <div style={statRow}>
+              <span style={{ fontSize: 13, color: '#5A3E00' }}>📸 Photos</span>
+              <span style={{ fontWeight: 700, color: '#C9960A', fontSize: 14 }}>{photos.length}</span>
+            </div>
+            {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+              <div key={c.id} style={statRow}>
+                <span style={{ fontSize: 12, color: '#7A5C20' }}>{c.icon} {c.label}</span>
+                <span style={{ fontSize: 12, color: '#A08040' }}>{countOf(c.id)}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Filter */}
+          <div style={sideCard}>
+            <p style={sideTitle}>Filtrer par</p>
+            {CATEGORIES.map(c => (
+              <div
+                key={c.id}
+                onClick={() => setSelectedCat(c.id)}
+                style={selectedCat === c.id ? activeCatRow : catRow}
+              >
+                <span>{c.icon} {c.label}</span>
+                <span style={{ fontSize: 11, opacity: 0.7 }}>{countOf(c.id)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Main */}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', background: 'rgba(249,246,238,0.70)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+
+          {/* Main header */}
+          <div style={{ padding: '28px 28px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+            <div>
+              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px' }}>
+                Wedding Memories ♡
+              </h1>
+              <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 15, color: '#C9960A', margin: '0 0 6px' }}>
+                Revivez la joie. Partagez l'amour.
+              </p>
+              <p style={{ fontSize: 13, color: '#A08040', margin: 0 }}>
+                Une collection de beaux moments partagés par nos invités.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              style={{ flexShrink: 0, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 10, padding: '12px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', whiteSpace: 'nowrap' }}
+            >
+              ⬆ Ajouter des photos
+            </button>
+          </div>
+
+          {/* Category tabs */}
+          <div style={{ paddingLeft: 28, paddingRight: 28, display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, flexShrink: 0 }}>
+            {CATEGORIES.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setSelectedCat(c.id)}
+                style={selectedCat === c.id ? activeTab : inactiveTab}
+              >
+                {c.label} ({countOf(c.id)})
+              </button>
+            ))}
+          </div>
+
+          {/* Photos */}
+          <div style={{ padding: '16px 28px 32px' }}>
+            {loadingPhotos ? (
+              <SkeletonGrid />
+            ) : filtered.length === 0 ? (
+              <EmptyState onUpload={() => setShowUploadModal(true)} catName={CATEGORIES.find(c => c.id === selectedCat)?.label} />
+            ) : (
+              <MasonryGrid photos={filtered} isAdmin={isAdmin} onPhotoClick={setLightbox} onDeleteClick={setDeleteConfirm} />
             )}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              style={uploading ? { ...s.uploadBtn, opacity: 0.6 } : s.uploadBtn}
-            >
-              {uploading ? '⏳' : '📷 Ajouter'}
-            </button>
-            <button
-              onClick={() => setLogoutConfirm(true)}
-              style={s.logoutBtn}
-              title="Se déconnecter"
-            >
-              ⏏
-            </button>
           </div>
         </div>
+      </div>
 
-        {uploading && (
-          <div style={s.progressTrack}>
-            <div style={{ ...s.progressBar, width: `${uploadProgress}%` }} />
-          </div>
-        )}
-      </header>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        style={{ display: 'none' }}
-      />
-
-      {uploadError && (
-        <div style={s.errorBanner}>
-          {uploadError}
-          <button onClick={() => setUploadError('')} style={s.errorBannerClose}>×</button>
-        </div>
+      {/* ── Upload modal ──────────────────────────────────────────────────── */}
+      {showUploadModal && (
+        <UploadModal
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={() => { loadPhotos(); setShowUploadModal(false) }}
+        />
       )}
 
-      {/* Gallery grid */}
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '12px 10px 40px' }}>
-        {loadingPhotos ? (
-          <SkeletonGrid />
-        ) : photos.length === 0 ? (
-          <EmptyState onUpload={() => fileInputRef.current?.click()} />
-        ) : (
-          <MasonryGrid
-            photos={photos}
-            isAdmin={isAdmin}
-            onPhotoClick={setLightbox}
-            onDeleteClick={setDeleteConfirm}
-          />
-        )}
-      </main>
-
-      {/* ── Logout confirmation ─────────────────────────────────────────── */}
+      {/* ── Logout confirm ────────────────────────────────────────────────── */}
       {logoutConfirm && (
-        <div style={s.modalOverlay} onClick={() => setLogoutConfirm(false)}>
-          <div style={{ ...s.modalCard, maxWidth: 320 }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ textAlign: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: 48 }}>👋</div>
-              <h2 style={s.modalTitle}>Se déconnecter ?</h2>
-              <p style={{ color: '#888', fontSize: 14 }}>Vous devrez entrer le mot de passe pour revenir.</p>
+        <div style={overlay} onClick={() => setLogoutConfirm(false)}>
+          <div style={{ ...modalCard, maxWidth: 320 }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 44 }}>👋</div>
+              <h2 style={modalTitle}>Se déconnecter ?</h2>
+              <p style={{ color: '#A08040', fontSize: 14 }}>Vous devrez entrer le mot de passe pour revenir.</p>
             </div>
-            <button onClick={handleLogout} style={s.dangerBtn}>
-              Oui, me déconnecter
-            </button>
-            <button onClick={() => setLogoutConfirm(false)} style={s.cancelBtn}>
-              Annuler
-            </button>
+            <button onClick={doLogout} style={dangerBtn}>Oui, me déconnecter</button>
+            <button onClick={() => setLogoutConfirm(false)} style={cancelBtn}>Annuler</button>
           </div>
         </div>
       )}
 
-      {/* ── Delete confirmation ──────────────────────────────────────────── */}
+      {/* ── Delete confirm ────────────────────────────────────────────────── */}
       {deleteConfirm && (
-        <div style={s.modalOverlay} onClick={() => setDeleteConfirm(null)}>
-          <div style={{ ...s.modalCard, maxWidth: 340 }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 48 }}>🗑️</div>
-              <h2 style={s.modalTitle}>Supprimer cette photo ?</h2>
-              <p style={{ color: '#888', fontSize: 14 }}>Cette action est irréversible.</p>
+        <div style={overlay} onClick={() => !deleting && setDeleteConfirm(null)}>
+          <div style={{ ...modalCard, maxWidth: 340 }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 44 }}>🗑️</div>
+              <h2 style={modalTitle}>Supprimer cette photo ?</h2>
+              <p style={{ color: '#A08040', fontSize: 14 }}>Cette action est irréversible.</p>
             </div>
-            <img
-              src={deleteConfirm.thumbUrl}
-              alt=""
-              style={{ width: '100%', borderRadius: 12, marginBottom: 16, maxHeight: 200, objectFit: 'cover' }}
-            />
-            <button
-              onClick={() => handleDelete(deleteConfirm)}
-              disabled={deleting}
-              style={deleting ? { ...s.dangerBtn, opacity: 0.6 } : s.dangerBtn}
-            >
+            <img src={deleteConfirm.thumbUrl} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 14, maxHeight: 180, objectFit: 'cover' }} />
+            <button onClick={() => handleDelete(deleteConfirm)} disabled={deleting} style={deleting ? { ...dangerBtn, opacity: 0.6 } : dangerBtn}>
               {deleting ? 'Suppression...' : 'Oui, supprimer'}
             </button>
-            <button onClick={() => setDeleteConfirm(null)} style={s.cancelBtn}>
-              Annuler
-            </button>
+            <button onClick={() => setDeleteConfirm(null)} style={cancelBtn}>Annuler</button>
           </div>
         </div>
       )}
 
-      {/* ── Lightbox ─────────────────────────────────────────────────────── */}
+      {/* ── Lightbox ──────────────────────────────────────────────────────── */}
       {lightbox && (
-        <div style={s.lightboxOverlay} onClick={() => setLightbox(null)}>
-          <button style={s.lightboxClose} onClick={() => setLightbox(null)}>✕</button>
-
-          <div style={s.lightboxActions} onClick={(e) => e.stopPropagation()}>
-            <a
-              href={lightbox.downloadUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={s.lightboxActionBtn}
-              title="Télécharger"
-            >
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.93)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setLightbox(null)}>
+          <button style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 40, height: 40, borderRadius: '50%', fontSize: 18, cursor: 'pointer', fontWeight: 700 }} onClick={() => setLightbox(null)}>✕</button>
+          <div style={{ position: 'absolute', bottom: 48, display: 'flex', gap: 10 }} onClick={e => e.stopPropagation()}>
+            <a href={lightbox.downloadUrl} target="_blank" rel="noreferrer" style={{ background: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
               ⬇ Télécharger
             </a>
             {isAdmin && (
-              <button
-                onClick={() => { setDeleteConfirm(lightbox); setLightbox(null) }}
-                style={{ ...s.lightboxActionBtn, background: 'rgba(220,38,38,0.85)' }}
-              >
+              <button onClick={() => { setDeleteConfirm(lightbox); setLightbox(null) }} style={{ background: 'rgba(220,38,38,0.85)', color: 'white', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                 🗑 Supprimer
               </button>
             )}
           </div>
-
-          <img
-            src={lightbox.url}
-            alt=""
-            style={s.lightboxImg}
-            onClick={(e) => e.stopPropagation()}
-          />
+          <img src={lightbox.url} alt="" style={{ maxWidth: '90vw', maxHeight: '78vh', borderRadius: 12, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
         </div>
       )}
     </div>
   )
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Upload modal ──────────────────────────────────────────────────────────────
+
+function UploadModal({ onClose, onSuccess }) {
+  const [file, setFile]       = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [category, setCategory] = useState('Autre')
+  const [uploading, setUploading] = useState(false)
+  const [progress, setProgress]   = useState(0)
+  const [error, setError]         = useState('')
+  const inputRef = useRef(null)
+
+  function handleSelect(e) {
+    const f = e.target.files[0]
+    if (!f) return
+    setFile(f)
+    setPreview(URL.createObjectURL(f))
+  }
+
+  function doUpload() {
+    if (!file || uploading) return
+    setUploading(true)
+    setProgress(0)
+    setError('')
+
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('category', category)
+
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', '/api/upload')
+    xhr.upload.onprogress = ev => {
+      if (ev.lengthComputable) setProgress(Math.round(ev.loaded / ev.total * 100))
+    }
+    xhr.onload = () => {
+      setUploading(false)
+      if (xhr.status < 300) {
+        if (preview) URL.revokeObjectURL(preview)
+        onSuccess()
+      } else {
+        setError("Erreur lors de l'upload. Réessayez.")
+      }
+    }
+    xhr.onerror = () => { setUploading(false); setError('Erreur réseau.') }
+    xhr.send(fd)
+  }
+
+  return (
+    <div style={overlay} onClick={uploading ? undefined : onClose}>
+      <div style={{ ...modalCard, maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 44 }}>📸</div>
+          <h2 style={modalTitle}>Ajouter vos souvenirs</h2>
+        </div>
+
+        {/* File zone */}
+        <div
+          onClick={() => inputRef.current?.click()}
+          style={{
+            border: '2px dashed #EAD080', borderRadius: 16,
+            overflow: 'hidden', marginBottom: 16, cursor: 'pointer',
+            minHeight: preview ? 0 : 120,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: '#FDFBF2',
+          }}
+        >
+          {preview ? (
+            <img src={preview} alt="" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
+          ) : (
+            <div style={{ padding: '28px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: 8 }}>🖼️</div>
+              <p style={{ color: '#A08040', margin: '0 0 4px', fontSize: 14, fontWeight: 600 }}>Cliquez pour choisir une photo</p>
+              <p style={{ color: '#C0A060', margin: 0, fontSize: 12 }}>JPG, PNG, HEIC — jusqu'à 50 Mo</p>
+            </div>
+          )}
+        </div>
+        <input ref={inputRef} type="file" accept="image/*" onChange={handleSelect} style={{ display: 'none' }} />
+
+        {/* Category */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: '#7A5C20', display: 'block', marginBottom: 6 }}>
+            Catégorie
+          </label>
+          <select
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            style={{ width: '100%', border: '1.5px solid #EAD080', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#2D1F00', background: '#FDFBF2', outline: 'none', cursor: 'pointer', fontFamily: "'Lato', sans-serif" }}
+          >
+            {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+              <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Progress */}
+        {uploading && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ height: 6, background: '#EAD080', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: 6, width: `${progress}%`, background: 'linear-gradient(90deg, #D4A017, #B8860B)', borderRadius: 3, transition: 'width 0.3s' }} />
+            </div>
+            <p style={{ fontSize: 12, color: '#A08040', textAlign: 'center', marginTop: 6 }}>{progress}% — envoi en cours...</p>
+          </div>
+        )}
+
+        {error && <p style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', margin: '0 0 10px' }}>{error}</p>}
+
+        <button
+          onClick={doUpload}
+          disabled={!file || uploading}
+          style={{ width: '100%', background: file && !uploading ? 'linear-gradient(135deg, #D4A017, #B8860B)' : '#E0D0A0', color: 'white', border: 'none', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: file && !uploading ? 'pointer' : 'not-allowed', marginBottom: 10, boxShadow: file && !uploading ? '0 4px 16px rgba(180,130,0,0.3)' : 'none' }}
+        >
+          {uploading ? `⬆ ${progress}%` : '⬆ Uploader'}
+        </button>
+
+        {!uploading && (
+          <button onClick={onClose} style={cancelBtn}>Annuler</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Gallery sub-components ────────────────────────────────────────────────────
 
 function MasonryGrid({ photos, isAdmin, onPhotoClick, onDeleteClick }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-      {[0, 1, 2].map((col) => (
-        <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {photos
-            .filter((_, i) => i % 3 === col)
-            .map((photo) => (
-              <PhotoCard
-                key={photo.id}
-                photo={photo}
-                isAdmin={isAdmin}
-                onClick={() => onPhotoClick(photo)}
-                onDelete={() => onDeleteClick(photo)}
-              />
-            ))}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      {[0, 1, 2].map(col => (
+        <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {photos.filter((_, i) => i % 3 === col).map(photo => (
+            <PhotoCard key={photo.id} photo={photo} isAdmin={isAdmin} onClick={() => onPhotoClick(photo)} onDelete={() => onDeleteClick(photo)} />
+          ))}
         </div>
       ))}
     </div>
@@ -497,42 +516,17 @@ function MasonryGrid({ photos, isAdmin, onPhotoClick, onDeleteClick }) {
 
 function PhotoCard({ photo, isAdmin, onClick, onDelete }) {
   const [hovered, setHovered] = useState(false)
-
   return (
     <div
-      style={{
-        ...s.photoCard,
-        transform: hovered ? 'scale(1.02)' : 'scale(1)',
-        boxShadow: hovered ? '0 8px 24px rgba(0,0,0,0.18)' : '0 2px 10px rgba(0,0,0,0.1)',
-      }}
+      style={{ borderRadius: 16, overflow: 'hidden', background: '#f0ead0', position: 'relative', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', transform: hovered ? 'scale(1.02)' : 'scale(1)', boxShadow: hovered ? '0 8px 24px rgba(180,140,0,0.2)' : '0 2px 10px rgba(0,0,0,0.08)' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <img
-        src={photo.thumbUrl}
-        alt=""
-        loading="lazy"
-        onClick={onClick}
-        style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }}
-      />
-
-      <div style={{ ...s.cardOverlay, opacity: hovered ? 1 : 0 }}>
-        <a
-          href={photo.downloadUrl}
-          target="_blank"
-          rel="noreferrer"
-          style={s.cardActionBtn}
-          onClick={(e) => e.stopPropagation()}
-        >
-          ⬇
-        </a>
+      <img src={photo.thumbUrl} alt="" loading="lazy" onClick={onClick} style={{ width: '100%', height: 'auto', display: 'block' }} />
+      <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 6, opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+        <a href={photo.downloadUrl} target="_blank" rel="noreferrer" style={{ background: 'rgba(0,0,0,0.55)', color: 'white', borderRadius: 8, padding: '6px 10px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }} onClick={e => e.stopPropagation()}>⬇</a>
         {isAdmin && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete() }}
-            style={{ ...s.cardActionBtn, background: 'rgba(220,38,38,0.85)', border: 'none', cursor: 'pointer' }}
-          >
-            🗑
-          </button>
+          <button onClick={e => { e.stopPropagation(); onDelete() }} style={{ background: 'rgba(220,38,38,0.8)', color: 'white', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>🗑</button>
         )}
       </div>
     </div>
@@ -541,11 +535,11 @@ function PhotoCard({ photo, isAdmin, onClick, onDelete }) {
 
 function SkeletonGrid() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-      {[0, 1, 2].map((col) => (
-        <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[180, 240, 160, 210, 190].map((h, i) => (
-            <div key={i} style={{ ...s.skeleton, height: h }} />
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      {[0, 1, 2].map(col => (
+        <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[180, 240, 160, 210].map((h, i) => (
+            <div key={i} style={{ borderRadius: 16, height: h, background: 'linear-gradient(90deg, #F5EDCC 25%, #F0E4A8 50%, #F5EDCC 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
           ))}
         </div>
       ))}
@@ -553,161 +547,34 @@ function SkeletonGrid() {
   )
 }
 
-function EmptyState({ onUpload }) {
+function EmptyState({ onUpload, catName }) {
   return (
-    <div style={s.emptyWrap}>
-      <div style={{ fontSize: 72, marginBottom: 16 }}>📸</div>
-      <p style={{ fontSize: 20, fontWeight: 600, color: '#555', margin: '0 0 6px' }}>
-        Aucune photo pour l'instant
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 60, textAlign: 'center' }}>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>📸</div>
+      <p style={{ fontSize: 18, fontWeight: 600, color: '#5A3E00', margin: '0 0 6px' }}>
+        {catName && catName !== 'Toutes' ? `Aucune photo dans "${catName}"` : 'Aucune photo pour l\'instant'}
       </p>
-      <p style={{ color: '#999', marginBottom: 24 }}>
-        Soyez le premier à partager un souvenir !
-      </p>
-      <button onClick={onUpload} style={s.emptyUploadBtn}>
+      <p style={{ color: '#A08040', marginBottom: 24 }}>Soyez le premier à partager un souvenir !</p>
+      <button onClick={onUpload} style={{ background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '14px 32px', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)' }}>
         Ajouter la première photo 📷
       </button>
     </div>
   )
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Shared styles ─────────────────────────────────────────────────────────────
 
-const s = {
-  loadingWrap: {
-    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'linear-gradient(135deg, #FFFDE7, #FFF9C4)',
-  },
-  loadingEmoji: { fontSize: 64, animation: 'spin 1.5s linear infinite' },
+const sideCard = { background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 16, padding: '14px 16px', boxShadow: '0 2px 8px rgba(180,140,0,0.1)', border: '1px solid rgba(255,255,255,0.6)' }
+const sideTitle = { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#C9960A', margin: '0 0 10px' }
+const statRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #F5EDCC' }
+const catRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 10, cursor: 'pointer', fontSize: 13, color: '#5A3E00', marginBottom: 2 }
+const activeCatRow = { ...catRow, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', fontWeight: 700 }
 
-  loginBg: {
-    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-    background: 'linear-gradient(135deg, #FFF176 0%, #FFD54F 40%, #FF8A65 75%, #AED581 100%)',
-  },
-  loginCard: {
-    background: 'white', borderRadius: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-    padding: '40px 36px', maxWidth: 380, width: '100%',
-  },
-  loginTitle: { fontSize: 30, fontWeight: 800, color: '#E65100', margin: '0 0 6px' },
-  loginSub: { fontSize: 14, color: '#888', margin: 0 },
-  loginInput: {
-    width: '100%', border: '2px solid #FFD54F', borderRadius: 16,
-    padding: '14px 16px', fontSize: 16, textAlign: 'center', outline: 'none',
-    boxSizing: 'border-box', color: '#333',
-  },
-  loginBtn: {
-    background: 'linear-gradient(135deg, #FFD600, #FF8A00)', color: 'white', border: 'none',
-    borderRadius: 16, padding: '16px', fontSize: 16, fontWeight: 700, cursor: 'pointer',
-    boxShadow: '0 4px 20px rgba(255,138,0,0.4)',
-  },
-  errorText: { color: '#e53e3e', fontSize: 13, textAlign: 'center', margin: 0 },
+const activeTab = { background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
+const inactiveTab = { background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 20, padding: '7px 16px', fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }
 
-  header: {
-    background: 'linear-gradient(135deg, #FFD600 0%, #FF8A00 100%)',
-    position: 'sticky', top: 0, zIndex: 20, boxShadow: '0 2px 12px rgba(255,138,0,0.35)',
-  },
-  headerInner: {
-    maxWidth: 1200, margin: '0 auto', padding: '12px 16px',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  },
-  headerTitle: {
-    color: 'white', fontSize: 20, fontWeight: 800, margin: '0 0 2px',
-    display: 'flex', alignItems: 'center', gap: 8,
-  },
-  adminBadge: {
-    background: 'rgba(0,0,0,0.2)', borderRadius: 20, padding: '2px 10px',
-    fontSize: 12, fontWeight: 600,
-  },
-  headerCount: { color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: 0 },
-  uploadBtn: {
-    background: 'white', color: '#E65100', border: 'none', borderRadius: 50,
-    padding: '10px 18px', fontWeight: 700, fontSize: 14, cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)', whiteSpace: 'nowrap',
-  },
-  logoutBtn: {
-    background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none',
-    borderRadius: '50%', width: 40, height: 40, fontSize: 18, cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  progressTrack: { height: 4, background: 'rgba(255,255,255,0.3)' },
-  progressBar: { height: 4, background: '#AED581', transition: 'width 0.3s ease' },
-  errorBanner: {
-    background: '#FED7D7', color: '#C53030', textAlign: 'center', padding: '10px 16px',
-    fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  errorBannerClose: {
-    marginLeft: 8, fontWeight: 700, background: 'none', border: 'none',
-    cursor: 'pointer', color: '#C53030',
-  },
-
-  photoCard: {
-    borderRadius: 16, overflow: 'hidden', background: '#f5f5f5',
-    position: 'relative', transition: 'transform 0.2s, box-shadow 0.2s',
-  },
-  cardOverlay: {
-    position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 6,
-    transition: 'opacity 0.2s',
-  },
-  cardActionBtn: {
-    background: 'rgba(0,0,0,0.6)', color: 'white', borderRadius: 8,
-    padding: '6px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-    textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
-  },
-
-  skeleton: {
-    borderRadius: 16,
-    background: 'linear-gradient(90deg, #FFF9C4 25%, #FFF176 50%, #FFF9C4 75%)',
-    backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite',
-  },
-
-  emptyWrap: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    justifyContent: 'center', paddingTop: 80, textAlign: 'center',
-  },
-  emptyUploadBtn: {
-    background: 'linear-gradient(135deg, #FFD600, #FF8A00)', color: 'white',
-    border: 'none', borderRadius: 50, padding: '14px 32px', fontWeight: 700,
-    fontSize: 16, cursor: 'pointer', boxShadow: '0 4px 20px rgba(255,138,0,0.35)',
-  },
-
-  modalOverlay: {
-    position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.6)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-  },
-  modalCard: {
-    background: 'white', borderRadius: 24, padding: '32px 28px',
-    maxWidth: 400, width: '100%', display: 'flex', flexDirection: 'column', gap: 10,
-  },
-  modalTitle: { fontSize: 22, fontWeight: 800, color: '#1a1a1a', margin: '8px 0 4px' },
-  dangerBtn: {
-    background: '#DC2626', color: 'white', border: 'none', borderRadius: 14,
-    padding: '14px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-  },
-  cancelBtn: {
-    background: '#f3f4f6', color: '#555', border: 'none', borderRadius: 14,
-    padding: '14px', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-  },
-
-  lightboxOverlay: {
-    position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.93)',
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16,
-  },
-  lightboxClose: {
-    position: 'absolute', top: 16, right: 16,
-    background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white',
-    width: 40, height: 40, borderRadius: '50%', fontSize: 18, cursor: 'pointer', fontWeight: 700,
-  },
-  lightboxActions: {
-    position: 'absolute', bottom: 48, display: 'flex', gap: 10,
-  },
-  lightboxActionBtn: {
-    background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none',
-    borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700,
-    cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6,
-  },
-  lightboxImg: {
-    maxWidth: '90vw', maxHeight: '78vh', borderRadius: 12, objectFit: 'contain',
-  },
-  lightboxDate: {
-    color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 10, marginBottom: 56,
-  },
-}
+const overlay = { position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
+const modalCard = { background: 'white', borderRadius: 24, padding: '32px 28px', width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }
+const modalTitle = { fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#2D1F00', margin: '8px 0 4px', textAlign: 'center' }
+const dangerBtn = { background: '#DC2626', color: 'white', border: 'none', borderRadius: 14, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer' }
+const cancelBtn = { background: '#F5EED5', color: '#7A5C20', border: 'none', borderRadius: 14, padding: 14, fontSize: 14, fontWeight: 600, cursor: 'pointer' }
