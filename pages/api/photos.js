@@ -34,6 +34,11 @@ export default async function handler(req, res) {
         secure: true,
         transformation: [{ width: 2000, crop: 'limit', quality: 'auto', fetch_format: 'auto' }],
       }),
+      downloadUrl: cld.url(r.public_id, {
+        secure: true,
+        flags: 'attachment',
+        transformation: [{ quality: 100 }],
+      }),
       createdAt: r.created_at,
     }))
 
