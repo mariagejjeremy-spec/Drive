@@ -113,6 +113,16 @@ export default function Home() {
     xhr.send(fd)
   }
 
+  function handleLogout() {
+    localStorage.removeItem('w_auth')
+    localStorage.removeItem('w_admin')
+    localStorage.removeItem('w_admin_token')
+    setAuthed(false)
+    setIsAdmin(false)
+    setAdminToken(null)
+    setPassword('')
+  }
+
   async function handleDelete(photo) {
     setDeleting(true)
     try {
@@ -198,6 +208,13 @@ export default function Home() {
               style={uploading ? { ...s.uploadBtn, opacity: 0.6 } : s.uploadBtn}
             >
               {uploading ? '⏳' : '📷 Ajouter'}
+            </button>
+            <button
+              onClick={handleLogout}
+              style={s.logoutBtn}
+              title="Se déconnecter"
+            >
+              ⏏
             </button>
           </div>
         </div>
@@ -463,6 +480,11 @@ const s = {
     background: 'white', color: '#E65100', border: 'none', borderRadius: 50,
     padding: '10px 18px', fontWeight: 700, fontSize: 14, cursor: 'pointer',
     boxShadow: '0 2px 8px rgba(0,0,0,0.15)', whiteSpace: 'nowrap',
+  },
+  logoutBtn: {
+    background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none',
+    borderRadius: '50%', width: 40, height: 40, fontSize: 18, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
   progressTrack: { height: 4, background: 'rgba(255,255,255,0.3)' },
   progressBar: { height: 4, background: '#AED581', transition: 'width 0.3s ease' },
