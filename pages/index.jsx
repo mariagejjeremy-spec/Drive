@@ -7,9 +7,6 @@ export default function Home() {
 
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminToken, setAdminToken] = useState(null)
-  const [showAdminModal, setShowAdminModal] = useState(false)
-  const [adminPwd, setAdminPwd] = useState('')
-  const [adminError, setAdminError] = useState('')
 
   const [photos, setPhotos] = useState([])
   const [loadingPhotos, setLoadingPhotos] = useState(false)
@@ -39,7 +36,6 @@ export default function Home() {
     function onKey(e) {
       if (e.key === 'Escape') {
         setLightbox(null)
-        setShowAdminModal(false)
         setDeleteConfirm(null)
       }
     }
@@ -82,35 +78,6 @@ export default function Home() {
     } else {
       setLoginError('Mot de passe incorrect ❌')
     }
-  }
-
-  async function handleAdminLogin(e) {
-    e.preventDefault()
-    setAdminError('')
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: adminPwd }),
-    })
-    const data = await res.json()
-    if (res.ok && data.admin) {
-      localStorage.setItem('w_admin', '1')
-      localStorage.setItem('w_admin_token', data.adminToken)
-      setIsAdmin(true)
-      setAdminToken(data.adminToken)
-      setShowAdminModal(false)
-      setAdminPwd('')
-    } else {
-      setAdminError('Mot de passe admin incorrect ❌')
-    }
-  }
-
-  function logoutAdmin() {
-    localStorage.removeItem('w_admin')
-    localStorage.removeItem('w_admin_token')
-    setIsAdmin(false)
-    setAdminToken(null)
-    setShowAdminModal(false)
   }
 
   function handleFileChange(e) {
@@ -232,13 +199,6 @@ export default function Home() {
             >
               {uploading ? '⏳' : '📷 Ajouter'}
             </button>
-            <button
-              onClick={() => setShowAdminModal(true)}
-              style={s.adminIconBtn}
-              title="Mode administrateur"
-            >
-              ⚙️
-            </button>
           </div>
         </div>
 
@@ -280,57 +240,7 @@ export default function Home() {
         )}
       </main>
 
-      {/* ── Admin modal ─────────────────────────────────────────────────── */}
-      {showAdminModal && (
-        <div style={s.modalOverlay} onClick={() => setShowAdminModal(false)}>
-          <div style={s.modalCard} onClick={(e) => e.stopPropagation()}>
-            {isAdmin ? (
-              <>
-                <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                  <div style={{ fontSize: 48 }}>👑</div>
-                  <h2 style={s.modalTitle}>Mode Admin actif</h2>
-                  <p style={{ color: '#888', fontSize: 14 }}>
-                    Vous pouvez supprimer des photos.
-                  </p>
-                </div>
-                <button onClick={logoutAdmin} style={s.dangerBtn}>
-                  Quitter le mode admin
-                </button>
-                <button onClick={() => setShowAdminModal(false)} style={s.cancelBtn}>
-                  Fermer
-                </button>
-              </>
-            ) : (
-              <>
-                <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                  <div style={{ fontSize: 48 }}>🔐</div>
-                  <h2 style={s.modalTitle}>Mode Administrateur</h2>
-                  <p style={{ color: '#888', fontSize: 14 }}>
-                    Entrez le mot de passe admin pour gérer la galerie.
-                  </p>
-                </div>
-                <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input
-                    type="password"
-                    value={adminPwd}
-                    onChange={(e) => { setAdminPwd(e.target.value); setAdminError('') }}
-                    placeholder="Mot de passe admin"
-                    autoFocus
-                    style={s.loginInput}
-                  />
-                  {adminError && <p style={s.errorText}>{adminError}</p>}
-                  <button type="submit" style={s.loginBtn}>Accéder</button>
-                  <button type="button" onClick={() => setShowAdminModal(false)} style={s.cancelBtn}>
-                    Annuler
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Delete confirmation ─────────────────────────────────────────── */}
+      {/* ── Delete confirmation ──────────────────────────────────────────── */}
       {deleteConfirm && (
         <div style={s.modalOverlay} onClick={() => setDeleteConfirm(null)}>
           <div style={{ ...s.modalCard, maxWidth: 340 }} onClick={(e) => e.stopPropagation()}>
@@ -358,7 +268,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Lightbox ────────────────────────────────────────────────────── */}
+      {/* ── Lightbox ─────────────────────────────────────────────────────── */}
       {lightbox && (
         <div style={s.lightboxOverlay} onClick={() => setLightbox(null)}>
           <button style={s.lightboxClose} onClick={() => setLightbox(null)}>✕</button>
@@ -377,7 +287,6 @@ export default function Home() {
               <button
                 onClick={() => { setDeleteConfirm(lightbox); setLightbox(null) }}
                 style={{ ...s.lightboxActionBtn, background: 'rgba(220,38,38,0.85)' }}
-                title="Supprimer"
               >
                 🗑 Supprimer
               </button>
@@ -448,14 +357,12 @@ function PhotoCard({ photo, isAdmin, onClick, onDelete }) {
         style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }}
       />
 
-      {/* Action buttons overlay */}
       <div style={{ ...s.cardOverlay, opacity: hovered ? 1 : 0 }}>
         <a
           href={photo.downloadUrl}
           target="_blank"
           rel="noreferrer"
           style={s.cardActionBtn}
-          title="Télécharger"
           onClick={(e) => e.stopPropagation()}
         >
           ⬇
@@ -463,8 +370,7 @@ function PhotoCard({ photo, isAdmin, onClick, onDelete }) {
         {isAdmin && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete() }}
-            style={{ ...s.cardActionBtn, background: 'rgba(220,38,38,0.85)' }}
-            title="Supprimer"
+            style={{ ...s.cardActionBtn, background: 'rgba(220,38,38,0.85)', border: 'none', cursor: 'pointer' }}
           >
             🗑
           </button>
@@ -544,7 +450,10 @@ const s = {
     maxWidth: 1200, margin: '0 auto', padding: '12px 16px',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   },
-  headerTitle: { color: 'white', fontSize: 20, fontWeight: 800, margin: '0 0 2px', display: 'flex', alignItems: 'center', gap: 8 },
+  headerTitle: {
+    color: 'white', fontSize: 20, fontWeight: 800, margin: '0 0 2px',
+    display: 'flex', alignItems: 'center', gap: 8,
+  },
   adminBadge: {
     background: 'rgba(0,0,0,0.2)', borderRadius: 20, padding: '2px 10px',
     fontSize: 12, fontWeight: 600,
@@ -555,18 +464,16 @@ const s = {
     padding: '10px 18px', fontWeight: 700, fontSize: 14, cursor: 'pointer',
     boxShadow: '0 2px 8px rgba(0,0,0,0.15)', whiteSpace: 'nowrap',
   },
-  adminIconBtn: {
-    background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none',
-    borderRadius: '50%', width: 40, height: 40, fontSize: 18, cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
   progressTrack: { height: 4, background: 'rgba(255,255,255,0.3)' },
   progressBar: { height: 4, background: '#AED581', transition: 'width 0.3s ease' },
   errorBanner: {
     background: '#FED7D7', color: '#C53030', textAlign: 'center', padding: '10px 16px',
     fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
-  errorBannerClose: { marginLeft: 8, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', color: '#C53030' },
+  errorBannerClose: {
+    marginLeft: 8, fontWeight: 700, background: 'none', border: 'none',
+    cursor: 'pointer', color: '#C53030',
+  },
 
   photoCard: {
     borderRadius: 16, overflow: 'hidden', background: '#f5f5f5',
@@ -577,7 +484,7 @@ const s = {
     transition: 'opacity 0.2s',
   },
   cardActionBtn: {
-    background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: 8,
+    background: 'rgba(0,0,0,0.6)', color: 'white', borderRadius: 8,
     padding: '6px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
     textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
   },
