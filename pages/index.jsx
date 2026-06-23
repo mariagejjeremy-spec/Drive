@@ -283,11 +283,11 @@ export default function Home() {
           <a
             href={`/api/download-all${selectedCat !== 'all' ? `?category=${encodeURIComponent(selectedCat)}` : ''}`}
             download
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', borderRadius: 14, padding: '13px 16px', fontWeight: 700, fontSize: 13, textDecoration: 'none', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', textAlign: 'center' }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', borderRadius: 14, padding: '13px 16px', fontWeight: 700, fontSize: 13, textDecoration: 'none', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', textAlign: 'center' }}
           >
             Tout télécharger
             {selectedCat !== 'all' && (
-              <span style={{ fontSize: 11, opacity: 0.85, fontWeight: 400 }}>({CATEGORIES.find(c => c.id === selectedCat)?.label})</span>
+              <span style={{ fontSize: 11, opacity: 0.85, fontWeight: 400, marginTop: 2 }}>{CATEGORIES.find(c => c.id === selectedCat)?.label}</span>
             )}
           </a>
         </div>
