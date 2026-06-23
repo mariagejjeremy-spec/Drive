@@ -272,7 +272,8 @@ export default function Home() {
                 onClick={() => setSelectedCat(c.id)}
                 style={selectedCat === c.id ? activeCatRow : catRow}
               >
-                <span>{c.label}</span>
+                <img src={CAT_ICONS[c.id]} alt="" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0, mixBlendMode: 'multiply' }} />
+                <span style={{ flex: 1 }}>{c.label}</span>
                 <span style={{ fontSize: 11, opacity: 0.7 }}>{countOf(c.id)}</span>
               </div>
             ))}
