@@ -43,6 +43,10 @@ body {
   display: none !important;
 }
 
+/* ── Desktop-only / mobile-only illustration helpers ────────────────────── */
+.desktop-icon { display: inline-block; }
+.mobile-only  { display: inline; }
+
 /* ── Desktop-only sidebar ────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar-desktop {
@@ -74,4 +78,8 @@ body {
   .filter-pill-mobile {
     display: block !important;
   }
+
+  /* hide desktop illustrations on mobile */
+  .desktop-icon { display: none !important; }
+  .mobile-only  { display: inline !important; }
 }

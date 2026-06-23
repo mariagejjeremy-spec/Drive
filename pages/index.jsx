@@ -171,12 +171,12 @@ export default function Home() {
 
           <div style={{ position: 'relative', display: 'flex', gap: 36 }}>
             {[
-              { icon: '📸', title: 'Uploadez',    sub: 'Vos moments préférés' },
-              { icon: '💛', title: 'Revivez',     sub: 'La journée ensemble' },
-              { icon: '📖', title: 'Notre album', sub: 'Tous les souvenirs' },
+              { img: '/icon-camera.png', title: 'Uploadez',    sub: 'Vos moments préférés' },
+              { img: '/icon-heart.png',  title: 'Revivez',     sub: 'La journée ensemble' },
+              { img: '/icon-book.png',   title: 'Notre album', sub: 'Tous les souvenirs' },
             ].map(f => (
               <div key={f.title}>
-                <div style={{ fontSize: 22, marginBottom: 6 }}>{f.icon}</div>
+                <img src={f.img} alt="" style={{ height: 48, width: 48, objectFit: 'contain', mixBlendMode: 'multiply', display: 'block', marginBottom: 8 }} />
                 <p style={{ fontWeight: 700, color: '#3D2800', fontSize: 13, margin: '0 0 2px' }}>{f.title}</p>
                 <p style={{ color: 'rgba(80,55,0,0.55)', fontSize: 12, margin: 0 }}>{f.sub}</p>
               </div>
@@ -227,6 +227,7 @@ export default function Home() {
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: '#2D1F00', lineHeight: 1.1 }}>Notre Mariage</div>
             <div style={{ fontSize: 9, letterSpacing: 3, color: '#C9960A', fontWeight: 700, textTransform: 'uppercase' }}>WEDDING MEMORIES</div>
           </div>
+          <img src="/icon-book.png" className="desktop-icon" alt="" style={{ height: 38, width: 38, objectFit: 'contain', mixBlendMode: 'multiply', marginLeft: 4 }} />
         </div>
         <button onClick={() => setLogoutConfirm(true)} style={{ background: 'none', border: 'none', color: '#A08040', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
           ↪ Se déconnecter
@@ -242,7 +243,7 @@ export default function Home() {
           {/* Welcome */}
           <div style={sideCard}>
             <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
-              <div style={{ fontSize: 36 }}>💛</div>
+              <img src="/icon-camera.png" alt="" style={{ height: 54, width: 54, objectFit: 'contain', mixBlendMode: 'multiply', display: 'block', margin: '0 auto 4px' }} />
               <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 700, color: '#2D1F00', margin: '8px 0 4px' }}>Bienvenue !</h3>
               <p style={{ fontSize: 12, color: '#A08040', margin: 0, lineHeight: 1.5 }}>Merci de partager ces beaux souvenirs.</p>
             </div>
@@ -300,8 +301,10 @@ export default function Home() {
 
             {/* Title */}
             <div style={{ padding: '28px 28px 12px' }}>
-              <h1 className="gallery-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Wedding Memories ♡
+              <h1 className="gallery-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 8 }}>
+                Wedding Memories
+                <img src="/icon-heart.png" className="desktop-icon" alt="♡" style={{ height: 38, width: 38, objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />
+                <span className="mobile-only">♡</span>
               </h1>
               <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 15, color: '#C9960A', margin: '0 0 6px' }}>
                 Revivez la joie. Partagez l'amour.
