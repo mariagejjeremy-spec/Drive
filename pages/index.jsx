@@ -318,11 +318,11 @@ export default function Home() {
                 onClick={() => {
                   if (!filterOpen && filterBtnRef.current) {
                     const r = filterBtnRef.current.getBoundingClientRect()
-                    setFilterRect({ top: r.bottom + 8, left: r.left })
+                    setFilterRect({ top: r.bottom + 8, left: r.left, width: r.width })
                   }
                   setFilterOpen(v => !v)
                 }}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'white', border: '2px solid #EAD080', borderRadius: 50, padding: '7px 18px 7px 7px', cursor: 'pointer', boxShadow: '0 2px 16px rgba(180,140,0,0.15)', fontFamily: "'Lato', sans-serif" }}
+                style={{ display: 'flex', alignItems: 'center', width: '100%', gap: 10, background: 'white', border: '2px solid #EAD080', borderRadius: 50, padding: '7px 18px 7px 7px', cursor: 'pointer', boxShadow: '0 2px 16px rgba(180,140,0,0.15)', fontFamily: "'Lato', sans-serif" }}
               >
                 <img src={CAT_ICONS[selectedCat]} alt="" style={{ height: 46, width: 46, objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 600, color: '#2D1F00', minWidth: 60 }}>
@@ -334,7 +334,7 @@ export default function Home() {
               {filterOpen && filterRect && (
                 <>
                   <div style={{ position: 'fixed', inset: 0, zIndex: 35 }} onClick={() => setFilterOpen(false)} />
-                  <div style={{ position: 'fixed', top: filterRect.top, left: filterRect.left, zIndex: 36, background: 'white', border: '2px solid #EAD080', borderRadius: 20, boxShadow: '0 8px 32px rgba(180,140,0,0.18)', minWidth: 240, overflow: 'hidden' }}>
+                  <div style={{ position: 'fixed', top: filterRect.top, left: filterRect.left, zIndex: 36, background: 'white', border: '2px solid #EAD080', borderRadius: 20, boxShadow: '0 8px 32px rgba(180,140,0,0.18)', width: filterRect.width, overflow: 'hidden' }}>
                     {CATEGORIES.map((c, i) => (
                       <div
                         key={c.id}
