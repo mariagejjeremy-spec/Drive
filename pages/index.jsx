@@ -564,34 +564,36 @@ function UploadModal({ onClose, onSuccess }) {
 
 // ── Gallery sub-components ────────────────────────────────────────────────────
 
+// No squares — all cells are portrait or landscape
 const MOSAIC_PATTERN = [
-  'mosaic-large', // 2×2
-  'mosaic-tall',  // 1×2
-  '',             // 1×1
-  '',             // 1×1
-  'mosaic-wide',  // 2×1
-  '',             // 1×1
-  '',             // 1×1
-  'mosaic-wide',  // 2×1
-  'mosaic-tall',  // 1×2
-  '',             // 1×1
-  'mosaic-large', // 2×2
-  '',             // 1×1
-  '',             // 1×1
-  'mosaic-wide',  // 2×1
-  '',             // 1×1
-  '',             // 1×1
+  { cols: 2, ratio: '4/3'  }, // wide landscape
+  { cols: 1, ratio: '2/3'  }, // tall portrait
+  { cols: 1, ratio: '3/4'  }, // portrait
+  { cols: 2, ratio: '16/9' }, // panoramic
+  { cols: 1, ratio: '3/4'  }, // portrait
+  { cols: 1, ratio: '4/3'  }, // landscape
+  { cols: 1, ratio: '2/3'  }, // tall portrait
+  { cols: 2, ratio: '3/2'  }, // wide landscape
+  { cols: 1, ratio: '3/4'  }, // portrait
+  { cols: 1, ratio: '4/3'  }, // landscape
+  { cols: 2, ratio: '4/3'  }, // wide
+  { cols: 1, ratio: '3/4'  }, // portrait
+  { cols: 1, ratio: '2/3'  }, // tall portrait
+  { cols: 2, ratio: '16/9' }, // panoramic
+  { cols: 1, ratio: '4/3'  }, // landscape
+  { cols: 1, ratio: '3/4'  }, // portrait
 ]
 
-function getMosaicClass(i) {
-  return MOSAIC_PATTERN[i % MOSAIC_PATTERN.length]
+function getMosaicStyle(i) {
+  const p = MOSAIC_PATTERN[i % MOSAIC_PATTERN.length]
+  return { gridColumn: `span ${p.cols}`, aspectRatio: p.ratio }
 }
 
 function MasonryGrid({ photos, isAdmin, onPhotoClick, onDeleteClick }) {
   return (
     <div className="photo-grid">
       {photos.map((photo, i) => (
-        <div key={photo.id} className={`photo-card-wrap ${getMosaicClass(i)}`}>
+        <div key={photo.id} className="photo-card-wrap" style={getMosaicStyle(i)}>
           <PhotoCard photo={photo} isAdmin={isAdmin} onClick={() => onPhotoClick(photo)} onDelete={() => onDeleteClick(photo)} />
         </div>
       ))}
@@ -622,8 +624,8 @@ function SkeletonGrid() {
   return (
     <div className="photo-grid">
       {Array.from({ length: 16 }, (_, i) => (
-        <div key={i} className={`photo-card-wrap ${getMosaicClass(i)}`}>
-          <div style={{ borderRadius: 16, height: '100%', background: 'linear-gradient(90deg, #F5EDCC 25%, #F0E4A8 50%, #F5EDCC 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+        <div key={i} className="photo-card-wrap" style={getMosaicStyle(i)}>
+          <div style={{ width: '100%', height: '100%', borderRadius: 16, background: 'linear-gradient(90deg, #F5EDCC 25%, #F0E4A8 50%, #F5EDCC 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
         </div>
       ))}
     </div>

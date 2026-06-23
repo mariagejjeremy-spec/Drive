@@ -31,18 +31,15 @@ body {
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 180px;
   gap: 8px;
   grid-auto-flow: row dense;
+  align-items: start;
 }
 .photo-card-wrap {
-  break-inside: unset;
-  margin-bottom: 0;
+  overflow: hidden;
+  border-radius: 16px;
   min-height: 0;
 }
-.mosaic-large { grid-column: span 2; grid-row: span 2; }
-.mosaic-wide  { grid-column: span 2; }
-.mosaic-tall  { grid-row: span 2; }
 
 /* ── FAB + filter pill: hidden on desktop, visible on mobile only ────────── */
 .fab-upload,
@@ -71,7 +68,6 @@ body {
   /* 2-col mosaic on phones */
   .photo-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 140px;
   }
 
   /* smaller title */
