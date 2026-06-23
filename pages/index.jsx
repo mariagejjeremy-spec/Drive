@@ -564,36 +564,39 @@ function UploadModal({ onClose, onSuccess }) {
 
 // ── Gallery sub-components ────────────────────────────────────────────────────
 
-// No squares — all cells are portrait or landscape
-const MOSAIC_PATTERN = [
-  { cols: 2, ratio: '4/3'  }, // wide landscape
-  { cols: 1, ratio: '2/3'  }, // tall portrait
-  { cols: 1, ratio: '3/4'  }, // portrait
-  { cols: 2, ratio: '16/9' }, // panoramic
-  { cols: 1, ratio: '3/4'  }, // portrait
-  { cols: 1, ratio: '4/3'  }, // landscape
-  { cols: 1, ratio: '2/3'  }, // tall portrait
-  { cols: 2, ratio: '3/2'  }, // wide landscape
-  { cols: 1, ratio: '3/4'  }, // portrait
-  { cols: 1, ratio: '4/3'  }, // landscape
-  { cols: 2, ratio: '4/3'  }, // wide
-  { cols: 1, ratio: '3/4'  }, // portrait
-  { cols: 1, ratio: '2/3'  }, // tall portrait
-  { cols: 2, ratio: '16/9' }, // panoramic
-  { cols: 1, ratio: '4/3'  }, // landscape
-  { cols: 1, ratio: '3/4'  }, // portrait
-]
+// 5-photo blocks that fill exactly 12 cols × 5 rows with no gaps.
+// Even blocks: tall portrait left | 2 landscapes centre | 2 portraits right
+// Odd blocks:  2 portraits left | tall portrait centre | 2 landscapes right
+function getMosaicPosition(i) {
+  const blockIndex  = Math.floor(i / 5)
+  const posInBlock  = i % 5
+  const rowStart    = blockIndex * 5 + 1
+  const isEven      = blockIndex % 2 === 0
 
-function getMosaicStyle(i) {
-  const p = MOSAIC_PATTERN[i % MOSAIC_PATTERN.length]
-  return { gridColumn: `span ${p.cols}`, aspectRatio: p.ratio }
+  const even = [
+    { col: '1 / 6',   row: `${rowStart} / ${rowStart + 5}` },
+    { col: '6 / 10',  row: `${rowStart} / ${rowStart + 2}` },
+    { col: '6 / 10',  row: `${rowStart + 2} / ${rowStart + 5}` },
+    { col: '10 / 13', row: `${rowStart} / ${rowStart + 3}` },
+    { col: '10 / 13', row: `${rowStart + 3} / ${rowStart + 5}` },
+  ]
+  const odd = [
+    { col: '1 / 4',   row: `${rowStart} / ${rowStart + 3}` },
+    { col: '1 / 4',   row: `${rowStart + 3} / ${rowStart + 5}` },
+    { col: '4 / 8',   row: `${rowStart} / ${rowStart + 5}` },
+    { col: '8 / 13',  row: `${rowStart} / ${rowStart + 3}` },
+    { col: '8 / 13',  row: `${rowStart + 3} / ${rowStart + 5}` },
+  ]
+
+  const pos = isEven ? even[posInBlock] : odd[posInBlock]
+  return { gridColumn: pos.col, gridRow: pos.row }
 }
 
 function MasonryGrid({ photos, isAdmin, onPhotoClick, onDeleteClick }) {
   return (
     <div className="photo-grid">
       {photos.map((photo, i) => (
-        <div key={photo.id} className="photo-card-wrap" style={getMosaicStyle(i)}>
+        <div key={photo.id} className="photo-card-wrap" style={getMosaicPosition(i)}>
           <PhotoCard photo={photo} isAdmin={isAdmin} onClick={() => onPhotoClick(photo)} onDelete={() => onDeleteClick(photo)} />
         </div>
       ))}
@@ -623,8 +626,8 @@ function PhotoCard({ photo, isAdmin, onClick, onDelete }) {
 function SkeletonGrid() {
   return (
     <div className="photo-grid">
-      {Array.from({ length: 16 }, (_, i) => (
-        <div key={i} className="photo-card-wrap" style={getMosaicStyle(i)}>
+      {Array.from({ length: 15 }, (_, i) => (
+        <div key={i} className="photo-card-wrap" style={getMosaicPosition(i)}>
           <div style={{ width: '100%', height: '100%', borderRadius: 16, background: 'linear-gradient(90deg, #F5EDCC 25%, #F0E4A8 50%, #F5EDCC 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
         </div>
       ))}
