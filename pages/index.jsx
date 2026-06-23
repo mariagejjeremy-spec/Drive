@@ -318,7 +318,7 @@ export default function Home() {
                 onClick={() => {
                   if (!filterOpen && filterBtnRef.current) {
                     const r = filterBtnRef.current.getBoundingClientRect()
-                    setFilterRect({ top: r.bottom + 8, left: r.left, width: r.width })
+                    setFilterRect({ top: r.bottom + 2, left: r.left, width: r.width })
                   }
                   setFilterOpen(v => !v)
                 }}
