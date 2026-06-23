@@ -475,52 +475,31 @@ function UploadModal({ onClose, onSuccess }) {
   return (
     <div style={overlay} onClick={uploading ? undefined : onClose}>
       <div style={{ ...modalCard, maxWidth: 420 }} onClick={e => e.stopPropagation()}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <img src="/empty-camera.png" alt="" style={{ height: 100, width: 'auto', display: 'block', margin: '0 auto' }} />
-          <h2 style={modalTitle}>Ajouter vos souvenirs</h2>
-        </div>
 
-        {/* File zone */}
-        <div
-          onClick={() => inputRef.current?.click()}
-          style={{
-            border: '2px dashed #EAD080', borderRadius: 16,
-            overflow: 'hidden', marginBottom: 16, cursor: 'pointer',
-            minHeight: preview ? 0 : 120,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            background: '#FDFBF2',
-          }}
-        >
-          {preview ? (
-            <img src={preview} alt="" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
-          ) : (
-            <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>🖼️</div>
-              <p style={{ color: '#A08040', margin: '0 0 4px', fontSize: 14, fontWeight: 600 }}>Choisir depuis la galerie</p>
-              <p style={{ color: '#C0A060', margin: 0, fontSize: 12 }}>JPG, PNG, HEIC — jusqu'à 50 Mo</p>
-            </div>
-          )}
-        </div>
-        <input ref={inputRef}  type="file" accept="image/*"                    onChange={handleSelect} style={{ display: 'none' }} />
-        <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} />
-
-        {/* Camera option — only shown when no photo selected yet */}
-        {!preview && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
-              <span style={{ fontSize: 13, color: '#C0A060' }}>ou</span>
-              <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
-            </div>
-            <button
-              type="button"
+        {/* Two selection cards — hidden once a photo is chosen */}
+        {!preview ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <img
+              src="/upload-gallery.png"
+              alt="Ajouter une photo"
+              onClick={() => inputRef.current?.click()}
+              style={{ width: '100%', height: 'auto', cursor: 'pointer', borderRadius: 16, display: 'block' }}
+            />
+            <img
+              src="/upload-camera.png"
+              alt="Prendre une photo"
               onClick={() => cameraRef.current?.click()}
-              style={{ width: '100%', background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 }}
-            >
-              📷 Prendre une photo
-            </button>
-          </>
+              style={{ width: '100%', height: 'auto', cursor: 'pointer', borderRadius: 16, display: 'block' }}
+            />
+          </div>
+        ) : (
+          <div style={{ marginBottom: 16 }}>
+            <img src={preview} alt="" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block', borderRadius: 16 }} />
+          </div>
         )}
+
+        <input ref={inputRef}  type="file" accept="image/*"                     onChange={handleSelect} style={{ display: 'none' }} />
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} />
 
         {/* Category */}
         <div style={{ marginBottom: 16 }}>
