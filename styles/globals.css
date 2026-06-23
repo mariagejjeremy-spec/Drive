@@ -39,6 +39,11 @@ body {
   overflow: hidden;
   border-radius: 16px;
   min-height: 0;
+  position: relative;
+}
+.photo-card-wrap > div {
+  position: absolute;
+  inset: 0;
 }
 
 /* ── FAB + filter pill: hidden on desktop, visible on mobile only ────────── */

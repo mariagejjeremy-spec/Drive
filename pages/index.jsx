@@ -605,11 +605,11 @@ function PhotoCard({ photo, isAdmin, onClick, onDelete }) {
   const [hovered, setHovered] = useState(false)
   return (
     <div
-      style={{ borderRadius: 16, overflow: 'hidden', background: '#f0ead0', position: 'relative', cursor: 'pointer', height: '100%', transition: 'transform 0.2s, box-shadow 0.2s', transform: hovered ? 'scale(1.02)' : 'scale(1)', boxShadow: hovered ? '0 8px 24px rgba(180,140,0,0.2)' : '0 2px 10px rgba(0,0,0,0.08)' }}
+      style={{ borderRadius: 16, overflow: 'hidden', background: '#f0ead0', position: 'relative', cursor: 'pointer', width: '100%', height: '100%', transition: 'transform 0.2s, box-shadow 0.2s', transform: hovered ? 'scale(1.02)' : 'scale(1)', boxShadow: hovered ? '0 8px 24px rgba(180,140,0,0.2)' : '0 2px 10px rgba(0,0,0,0.08)' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <img src={photo.thumbUrl} alt="" loading="lazy" onClick={onClick} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      <img src={photo.thumbUrl} alt="" loading="lazy" onClick={onClick} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
       <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 6, opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
         <a href={photo.downloadUrl} target="_blank" rel="noreferrer" style={{ background: 'rgba(0,0,0,0.55)', color: 'white', borderRadius: 8, padding: '6px 10px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }} onClick={e => e.stopPropagation()}>⬇</a>
         {isAdmin && (
