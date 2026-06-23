@@ -310,8 +310,8 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Filter pill */}
-            <div style={{ padding: '0 28px 16px' }}>
+            {/* Filter pill — mobile only */}
+            <div className="filter-pill-mobile" style={{ padding: '0 28px 16px' }}>
               <button
                 ref={filterBtnRef}
                 onClick={() => {

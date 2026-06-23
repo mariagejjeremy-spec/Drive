@@ -37,8 +37,9 @@ body {
   margin-bottom: 12px;
 }
 
-/* ── FAB: hidden on desktop (sidebar handles upload), visible on mobile ──── */
-.fab-upload {
+/* ── FAB + filter pill: hidden on desktop, visible on mobile only ────────── */
+.fab-upload,
+.filter-pill-mobile {
   display: none !important;
 }
 
@@ -66,8 +67,11 @@ body {
     font-size: 22px !important;
   }
 
-  /* show FAB on mobile */
+  /* show FAB and filter pill on mobile */
   .fab-upload {
     display: flex !important;
+  }
+  .filter-pill-mobile {
+    display: block !important;
   }
 }
