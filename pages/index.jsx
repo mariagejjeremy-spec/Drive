@@ -475,7 +475,7 @@ function UploadModal({ onClose, onSuccess }) {
     <div style={overlay} onClick={uploading ? undefined : onClose}>
       <div style={{ ...modalCard, maxWidth: 420 }} onClick={e => e.stopPropagation()}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 44 }}>📸</div>
+          <img src="/empty-camera.png" alt="" style={{ height: 100, width: 'auto', display: 'block', margin: '0 auto' }} />
           <h2 style={modalTitle}>Ajouter vos souvenirs</h2>
         </div>
 
