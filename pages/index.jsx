@@ -358,7 +358,8 @@ export default function Home() {
       <button
         onClick={() => setShowUploadModal(true)}
         title="Ajouter des photos"
-        style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 20, background: 'linear-gradient(135deg, #D4A017, #B8860B)', border: 'none', borderRadius: '50%', width: 66, height: 66, cursor: 'pointer', boxShadow: '0 6px 24px rgba(180,130,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+        className="fab-upload"
+        style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 20, background: 'linear-gradient(135deg, #D4A017, #B8860B)', border: 'none', borderRadius: '50%', width: 66, height: 66, cursor: 'pointer', boxShadow: '0 6px 24px rgba(180,130,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 0 }}
       >
         <img src="/lemon-camera.svg" alt="Ajouter des photos" style={{ height: 46, width: 46 }} />
       </button>

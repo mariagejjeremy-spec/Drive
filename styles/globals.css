@@ -37,6 +37,11 @@ body {
   margin-bottom: 12px;
 }
 
+/* ── FAB: hidden on desktop (sidebar handles upload), visible on mobile ──── */
+.fab-upload {
+  display: none !important;
+}
+
 /* ── Desktop-only sidebar ────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar-desktop {
@@ -59,5 +64,10 @@ body {
   /* smaller title */
   .gallery-title {
     font-size: 22px !important;
+  }
+
+  /* show FAB on mobile */
+  .fab-upload {
+    display: flex !important;
   }
 }
