@@ -410,11 +410,11 @@ export default function Home() {
           <button style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 40, height: 40, borderRadius: '50%', fontSize: 18, cursor: 'pointer', fontWeight: 700 }} onClick={() => setLightbox(null)}>✕</button>
           <div style={{ position: 'absolute', bottom: 48, display: 'flex', gap: 10 }} onClick={e => e.stopPropagation()}>
             <a href={lightbox.downloadUrl} target="_blank" rel="noreferrer" style={{ background: 'rgba(255,255,255,0.15)', color: 'white', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
-              ⬇ Télécharger
+              Télécharger
             </a>
             {isAdmin && (
-              <button onClick={() => { setDeleteConfirm(lightbox); setLightbox(null) }} style={{ background: 'rgba(220,38,38,0.85)', color: 'white', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                🗑 Supprimer
+              <button onClick={() => { setDeleteConfirm(lightbox); setLightbox(null) }} style={{ background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(180,130,0,0.4)' }}>
+                Supprimer
               </button>
             )}
           </div>
