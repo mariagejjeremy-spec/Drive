@@ -434,7 +434,8 @@ function UploadModal({ onClose, onSuccess }) {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress]   = useState(0)
   const [error, setError]         = useState('')
-  const inputRef = useRef(null)
+  const inputRef  = useRef(null)
+  const cameraRef = useRef(null)
 
   function handleSelect(e) {
     const f = e.target.files[0]
@@ -495,12 +496,31 @@ function UploadModal({ onClose, onSuccess }) {
           ) : (
             <div style={{ padding: '28px 16px', textAlign: 'center' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>🖼️</div>
-              <p style={{ color: '#A08040', margin: '0 0 4px', fontSize: 14, fontWeight: 600 }}>Cliquez pour choisir une photo</p>
+              <p style={{ color: '#A08040', margin: '0 0 4px', fontSize: 14, fontWeight: 600 }}>Choisir depuis la galerie</p>
               <p style={{ color: '#C0A060', margin: 0, fontSize: 12 }}>JPG, PNG, HEIC — jusqu'à 50 Mo</p>
             </div>
           )}
         </div>
-        <input ref={inputRef} type="file" accept="image/*" onChange={handleSelect} style={{ display: 'none' }} />
+        <input ref={inputRef}  type="file" accept="image/*"                    onChange={handleSelect} style={{ display: 'none' }} />
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} />
+
+        {/* Camera option — only shown when no photo selected yet */}
+        {!preview && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
+              <span style={{ fontSize: 13, color: '#C0A060' }}>ou</span>
+              <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
+            </div>
+            <button
+              type="button"
+              onClick={() => cameraRef.current?.click()}
+              style={{ width: '100%', background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 }}
+            >
+              📷 Prendre une photo
+            </button>
+          </>
+        )}
 
         {/* Category */}
         <div style={{ marginBottom: 16 }}>
