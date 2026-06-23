@@ -91,4 +91,7 @@ body {
   /* hide desktop illustrations on mobile */
   .desktop-icon { display: none !important; }
   .mobile-only  { display: inline !important; }
+
+  /* smaller empty state illustration on mobile */
+  .empty-img { width: 80px !important; }
 }

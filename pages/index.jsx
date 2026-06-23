@@ -641,6 +641,7 @@ function EmptyState({ onUpload, catName }) {
         <img
           src="/empty-camera.png"
           alt=""
+          className="empty-img"
           style={{ width: 210, height: 'auto', display: 'block', margin: '0 auto 20px' }}
         />
 
