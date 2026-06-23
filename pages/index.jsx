@@ -535,7 +535,7 @@ function UploadModal({ onClose, onSuccess }) {
           disabled={!file || uploading}
           style={{ width: '100%', background: file && !uploading ? 'linear-gradient(135deg, #D4A017, #B8860B)' : '#E0D0A0', color: 'white', border: 'none', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: file && !uploading ? 'pointer' : 'not-allowed', marginBottom: 10, boxShadow: file && !uploading ? '0 4px 16px rgba(180,130,0,0.3)' : 'none' }}
         >
-          {uploading ? `⬆ ${progress}%` : '⬆ Uploader'}
+          {uploading ? `⬆ ${progress}%` : 'Uploader'}
         </button>
 
         {!uploading && (
