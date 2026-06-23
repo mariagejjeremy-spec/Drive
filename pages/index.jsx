@@ -611,18 +611,8 @@ function EmptyState({ onUpload, catName }) {
           Soyez la première personne à partager<br />un souvenir de notre mariage.
         </p>
 
-        <button onClick={onUpload} style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '14px 24px', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+        <button onClick={onUpload} style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 50, padding: '14px 24px', fontWeight: 700, fontSize: 15, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 0 }}>
           Ajouter des photos
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
-          <span style={{ fontSize: 13, color: '#C0A060' }}>ou</span>
-          <div style={{ flex: 1, height: 1, background: '#EAD080' }} />
-        </div>
-
-        <button onClick={onUpload} style={{ width: '100%', background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 50, padding: '12px 24px', fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          Importer depuis mon appareil
         </button>
 
       </div>
