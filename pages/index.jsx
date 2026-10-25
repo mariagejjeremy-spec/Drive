@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 
 const CLOUDINARY_CONFIGURATION_CODE = 'CLOUDINARY_CONFIGURATION'
 const CLOUDINARY_CONFIGURATION_MESSAGE =
-  'La configuration Cloudinary est invalide. Vérifiez le Cloud name et les clés API.'
+  'La configuration Cloudinary est invalide. Vérifiez le Cloud name (pas la clé API) et que les clés API appartiennent au même compte.'
 
 const CATEGORIES = [
   { id: 'all', label: 'Toutes' },
