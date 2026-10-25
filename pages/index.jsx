@@ -37,6 +37,7 @@ export default function Home() {
   const [loadingPhotos, setLoadingPhotos] = useState(false)
   const [photosError, setPhotosError]     = useState('')
   const [selectedCat, setSelectedCat]     = useState('all')
+  const [managerOpen, setManagerOpen]     = useState(false)
 
   const [showUploadModal, setShowUploadModal] = useState(false)
 
@@ -79,15 +80,18 @@ export default function Home() {
     try {
       const res = await fetch('/api/photos')
       const data = await res.json()
-      setPhotos(data.photos || [])
+      const loadedPhotos = data.photos || []
+      setPhotos(loadedPhotos)
       setPhotosError(
         data.code === CLOUDINARY_CONFIGURATION_CODE
           ? CLOUDINARY_CONFIGURATION_MESSAGE
           : res.ok ? '' : data.error || 'Impossible de charger les photos.'
       )
+      return loadedPhotos
     } catch {
       setPhotos([])
       setPhotosError('Impossible de charger les photos.')
+      return []
     } finally {
       setLoadingPhotos(false)
     }
@@ -125,6 +129,7 @@ export default function Home() {
     setIsAdmin(false)
     setAdminToken(null)
     setPassword('')
+    setManagerOpen(false)
     setLogoutConfirm(false)
   }
 
@@ -174,7 +179,7 @@ export default function Home() {
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(60,35,0,0.18)', pointerEvents: 'none' }} />
 
           <p style={{ position: 'relative', fontSize: 12, letterSpacing: 4, textTransform: 'uppercase', color: 'rgba(90,60,0,0.6)', fontWeight: 700, margin: 0 }}>
-            🍋 Notre Mariage &nbsp;·&nbsp; Souvenirs
+            Notre Mariage &nbsp;·&nbsp; Souvenirs
           </p>
 
           <div style={{ position: 'relative' }}>
@@ -189,12 +194,12 @@ export default function Home() {
 
           <div style={{ position: 'relative', display: 'flex', gap: 36 }}>
             {[
-              { img: '/icon-camera.png', title: 'Uploadez',    sub: 'Vos moments préférés' },
-              { img: '/icon-heart.png',  title: 'Revivez',     sub: 'La journée ensemble' },
-              { img: '/icon-book.png',   title: 'Notre album', sub: 'Tous les souvenirs' },
+              { img: '/icon-camera-transparent.svg', title: 'Uploadez',    sub: 'Vos moments préférés' },
+              { img: '/icon-heart-transparent.svg',  title: 'Revivez',     sub: 'La journée ensemble' },
+              { img: '/icon-book-transparent.svg',   title: 'Notre album', sub: 'Tous les souvenirs' },
             ].map(f => (
               <div key={f.title}>
-                <img src={f.img} alt="" style={{ height: 48, width: 48, objectFit: 'contain', mixBlendMode: 'multiply', display: 'block', marginBottom: 8 }} />
+                <img src={f.img} alt="" style={{ height: 48, width: 48, objectFit: 'contain', display: 'block', marginBottom: 8 }} />
                 <p style={{ fontWeight: 700, color: '#3D2800', fontSize: 13, margin: '0 0 2px' }}>{f.title}</p>
                 <p style={{ color: 'rgba(80,55,0,0.55)', fontSize: 12, margin: 0 }}>{f.sub}</p>
               </div>
@@ -206,7 +211,7 @@ export default function Home() {
         <div className="login-right" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, padding: 24 }}>
           <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.38)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', borderRadius: 28, padding: '52px 40px', boxShadow: '0 8px 48px rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.5)' }}>
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
-              <div style={{ fontSize: 52, marginBottom: 14, lineHeight: 1 }}>🍋</div>
+              <img src="/lemon-camera.svg" alt="" style={{ height: 52, width: 64, objectFit: 'contain', display: 'block', margin: '0 auto 14px' }} />
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 8px' }}>Bienvenue</h2>
               <p style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: '#C9960A', fontWeight: 700, margin: 0 }}>Partagez vos souvenirs</p>
             </div>
@@ -225,7 +230,7 @@ export default function Home() {
               </button>
             </form>
             <p style={{ textAlign: 'center', color: '#C8B07A', fontSize: 12, margin: '28px 0 0' }}>
-              Réservé aux invités de notre mariage 🍊
+              Réservé aux invités de notre mariage
             </p>
           </div>
         </div>
@@ -238,30 +243,49 @@ export default function Home() {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Lato', sans-serif", overflow: 'hidden', backgroundImage: "url('/gallery-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundAttachment: 'fixed' }}>
 
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <div style={{ flex: 'none', height: 56, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: '1px solid #EAD88A', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', zIndex: 10 }}>
+      <div className="topbar" style={{ flex: 'none', height: 56, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: '1px solid #EAD88A', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 26 }}>🍋</span>
           <div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 700, color: '#2D1F00', lineHeight: 1.1 }}>Notre Mariage</div>
             <div style={{ fontSize: 9, letterSpacing: 3, color: '#C9960A', fontWeight: 700, textTransform: 'uppercase' }}>WEDDING MEMORIES</div>
           </div>
-          <img src="/icon-book.png" className="desktop-icon" alt="" style={{ height: 38, width: 38, objectFit: 'contain', mixBlendMode: 'multiply', marginLeft: 4 }} />
         </div>
-        <button onClick={() => setLogoutConfirm(true)} style={{ background: 'none', border: 'none', color: '#A08040', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-          ↪ Se déconnecter
-        </button>
+        <div className="topbar-actions">
+          {isAdmin && (
+            <button
+              onClick={() => setManagerOpen(open => !open)}
+              aria-label={managerOpen ? 'Retour à la galerie' : 'Gestion des images'}
+              aria-pressed={managerOpen}
+              title={managerOpen ? 'Retour à la galerie' : 'Gestion des images'}
+              className="topbar-admin-button"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 5h18v14H3z" />
+                <path d="M3 10h18M8 10v9m7-9v9" />
+              </svg>
+              <span className="admin-button-label">{managerOpen ? 'Galerie photo' : 'Gestion des images'}</span>
+            </button>
+          )}
+          <button onClick={() => setLogoutConfirm(true)} aria-label="Se déconnecter" title="Se déconnecter" style={{ background: 'none', border: 'none', color: '#A08040', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 17l5-5-5-5" />
+              <path d="M15 12H3" />
+              <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* ── Body ──────────────────────────────────────────────────────────── */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
 
         {/* Sidebar */}
-        <div className="sidebar-desktop" style={{ width: 230, flexShrink: 0, background: 'rgba(250,247,238,0.80)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRight: '1px solid rgba(234,216,138,0.6)', overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className={`sidebar-desktop${managerOpen ? ' sidebar-hidden' : ''}`} style={{ width: 230, flexShrink: 0, background: 'rgba(250,247,238,0.80)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRight: '1px solid rgba(234,216,138,0.6)', overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
           {/* Welcome */}
           <div style={sideCard}>
             <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
-              <img src="/icon-camera.png" alt="" style={{ height: 54, width: 54, objectFit: 'contain', mixBlendMode: 'multiply', display: 'block', margin: '0 auto 4px' }} />
+              <img src="/icon-camera-transparent.svg" alt="" style={{ height: 54, width: 54, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }} />
               <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 700, color: '#2D1F00', margin: '8px 0 4px' }}>Bienvenue !</h3>
               <p style={{ fontSize: 12, color: '#A08040', margin: 0, lineHeight: 1.5 }}>Merci de partager ces beaux souvenirs.</p>
             </div>
@@ -298,6 +322,10 @@ export default function Home() {
 
         {/* Main */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'rgba(249,246,238,0.70)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+          {managerOpen ? (
+            <PhotoManager photos={photos} loading={loadingPhotos} error={photosError} adminToken={adminToken} onRefresh={loadPhotos} />
+          ) : (
+            <>
 
           {/* Non-scrolling header */}
           <div style={{ flexShrink: 0 }}>
@@ -306,8 +334,7 @@ export default function Home() {
             <div style={{ padding: '28px 28px 12px' }}>
               <h1 className="gallery-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 700, color: '#2D1F00', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 8 }}>
                 Wedding Memories
-                <img src="/icon-heart.png" className="desktop-icon" alt="♡" style={{ height: 38, width: 38, objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />
-                <span className="mobile-only">♡</span>
+                <img src="/icon-heart-transparent.svg" className="desktop-icon" alt="" style={{ height: 38, width: 38, objectFit: 'contain', flexShrink: 0 }} />
               </h1>
               <p style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: 15, color: '#C9960A', margin: '0 0 6px' }}>
                 Revivez la joie. Partagez l'amour.
@@ -377,18 +404,20 @@ export default function Home() {
               <MasonryGrid photos={filtered} isAdmin={isAdmin} onPhotoClick={setLightbox} onDeleteClick={setDeleteConfirm} />
             )}
           </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* ── FAB upload button ─────────────────────────────────────────────── */}
-      <button
+      {!managerOpen && <button
         onClick={() => setShowUploadModal(true)}
         title="Ajouter des photos"
         className="fab-upload"
         style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 20, background: 'linear-gradient(135deg, #D4A017, #B8860B)', border: 'none', borderRadius: '50%', width: 66, height: 66, cursor: 'pointer', boxShadow: '0 6px 24px rgba(180,130,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 0 }}
       >
         <img src="/lemon-camera.svg" alt="Ajouter des photos" style={{ height: 46, width: 46 }} />
-      </button>
+      </button>}
 
       {/* ── Upload modal ──────────────────────────────────────────────────── */}
       {showUploadModal && (
@@ -770,6 +799,123 @@ function getMosaicPosition(i) {
 
   const pos = isEven ? even[posInBlock] : odd[posInBlock]
   return { gridColumn: pos.col, gridRow: pos.row }
+}
+
+function PhotoManager({ photos, loading, error, adminToken, onRefresh }) {
+  const [selectedIds, setSelectedIds] = useState([])
+  const [targetCategory, setTargetCategory] = useState('')
+  const [busyAction, setBusyAction] = useState('')
+  const [feedback, setFeedback] = useState('')
+  const allSelected = photos.length > 0 && photos.every(photo => selectedIds.includes(photo.id))
+
+  function toggleAll() {
+    setSelectedIds(allSelected ? [] : photos.map(photo => photo.id))
+  }
+
+  function togglePhoto(id) {
+    setSelectedIds(current => current.includes(id)
+      ? current.filter(selectedId => selectedId !== id)
+      : [...current, id]
+    )
+  }
+
+  async function runAction(action) {
+    if (!selectedIds.length || busyAction) return
+    if (action === 'delete' && !window.confirm(`Supprimer ${selectedIds.length} image${selectedIds.length > 1 ? 's' : ''} ? Cette action est irréversible.`)) return
+
+    setBusyAction(action)
+    setFeedback('')
+    try {
+      const res = await fetch('/api/manage-photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, publicIds: selectedIds, category: targetCategory, adminToken }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Une erreur est survenue.')
+
+      const failedIds = data.failed || []
+      const succeeded = (data.updated || []).length
+      setSelectedIds(failedIds)
+      await onRefresh()
+      const resultLabel = action === 'category' ? 'mise(s) à jour' : 'supprimée(s)'
+      setFeedback(`${succeeded} image${succeeded > 1 ? 's' : ''} ${resultLabel}.${failedIds.length ? ` ${failedIds.length} échec(s), sélection conservée pour réessayer.` : ''}`)
+    } catch (err) {
+      setFeedback(err.message || 'Une erreur est survenue.')
+    } finally {
+      setBusyAction('')
+    }
+  }
+
+  return (
+    <section className="photo-manager" aria-label="Gestionnaire des images">
+      <header className="photo-manager-header">
+        <div>
+          <h1>Gestion des images</h1>
+          <p>{photos.length} image{photos.length > 1 ? 's' : ''} dans la galerie</p>
+        </div>
+        <span className="photo-manager-count">{selectedIds.length} sélectionnée{selectedIds.length > 1 ? 's' : ''}</span>
+      </header>
+
+      <div className="photo-manager-toolbar">
+        <label className="photo-manager-select-all">
+          <input type="checkbox" checked={allSelected} onChange={toggleAll} disabled={!photos.length || !!busyAction} />
+          Tout sélectionner
+        </label>
+        <div className="photo-manager-actions">
+          <select aria-label="Nouvelle catégorie" value={targetCategory} onChange={event => setTargetCategory(event.target.value)} disabled={!!busyAction}>
+            <option value="">Choisir une catégorie</option>
+            {CATEGORIES.filter(category => category.id !== 'all').map(category => (
+              <option key={category.id} value={category.id}>{category.label}</option>
+            ))}
+          </select>
+          <button type="button" onClick={() => runAction('category')} disabled={!selectedIds.length || !targetCategory || !!busyAction}>
+            {busyAction === 'category' ? 'Modification...' : 'Changer la catégorie'}
+          </button>
+          <button type="button" className="photo-manager-delete" onClick={() => runAction('delete')} disabled={!selectedIds.length || !!busyAction}>
+            {busyAction === 'delete' ? 'Suppression...' : 'Supprimer'}
+          </button>
+        </div>
+      </div>
+
+      {feedback && <p className="photo-manager-feedback" role="status">{feedback}</p>}
+
+      <div className="photo-manager-scroll">
+        {error ? (
+          <p className="photo-manager-empty" role="alert">{error}</p>
+        ) : loading ? (
+          <p className="photo-manager-empty">Chargement des images...</p>
+        ) : photos.length ? (
+          <table className="photo-manager-table">
+            <thead>
+              <tr>
+                <th aria-label="Sélection" />
+                <th>Image</th>
+                <th>Nom</th>
+                <th>Catégorie</th>
+                <th>Ajoutée le</th>
+              </tr>
+            </thead>
+            <tbody>
+              {photos.map(photo => (
+                <tr key={photo.id} className={selectedIds.includes(photo.id) ? 'is-selected' : ''}>
+                  <td>
+                    <input type="checkbox" aria-label={`Sélectionner ${photo.id}`} checked={selectedIds.includes(photo.id)} onChange={() => togglePhoto(photo.id)} disabled={!!busyAction} />
+                  </td>
+                  <td><img className="photo-manager-thumbnail" src={photo.thumbUrl} alt="" loading="lazy" /></td>
+                  <td className="photo-manager-name" title={photo.id}>{photo.id.split('/').pop()}</td>
+                  <td>{CATEGORIES.find(category => category.id === photo.category)?.label || photo.category}</td>
+                  <td>{photo.createdAt ? new Date(photo.createdAt).toLocaleDateString('fr-FR') : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="photo-manager-empty">Aucune image à afficher.</p>
+        )}
+      </div>
+    </section>
+  )
 }
 
 function MasonryGrid({ photos, isAdmin, onPhotoClick, onDeleteClick }) {

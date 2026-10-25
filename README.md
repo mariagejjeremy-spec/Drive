@@ -1,69 +1,44 @@
-# Drive for guest photos
+# Galerie photo de mariage
 
-This project is a minimal Next.js starter to let guests upload photos from their phones and view others' uploads in real time using Firebase (Storage + Firestore) and Tailwind CSS.
+Galerie Next.js pour permettre aux invités de consulter et d'envoyer des photos. Les images sont stockées sur Cloudinary dans le dossier `wedding-photos`.
 
-Quick start
+## Configuration
 
-1. Install dependencies
-   npm install
+Définir les variables d'environnement côté serveur, dans `.env.local` en développement ou dans les paramètres de l'hébergeur en production. Cloudinary accepte l'un des deux formats suivants :
 
-2. Create a Firebase project
-   - Enable Firestore (in Native mode) and Storage
-   - Create a Web app and copy the config
+```env
+CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
+```
 
-3. Create a .env.local file at the repo root with these variables from your Firebase app:
+ou :
 
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-NEXT_PUBLIC_UPLOAD_URL=
+```env
+CLOUDINARY_CLOUD_NAME=<cloud_name>
+CLOUDINARY_API_KEY=<api_key>
+CLOUDINARY_API_SECRET=<api_secret>
+```
 
-NEXT_PUBLIC_UPLOAD_URL should point to the Cloud Function endpoint that will process uploads (e.g. https://us-central1-YOUR_PROJECT.cloudfunctions.net/app/upload)
+Définir également les mots de passe de la galerie et de l'administration :
 
-4. Run the dev server
-   npm run dev
+```env
+GALLERY_PASSWORD=<mot_de_passe_invites>
+ADMIN_PASSWORD=<mot_de_passe_admin>
+```
 
-What I added
-- package.json (Next.js, React, Firebase, Tailwind, etc.)
-- .gitignore
-- Tailwind + PostCSS config
-- pages/_app.jsx, pages/index.jsx, pages/upload.jsx
-- lib/firebase.js to initialize Firebase using env vars and ensure anonymous sign-in
-- styles/globals.css
-- functions/ (Cloud Function handling uploads with quotas)
-- firebase.rules (example Firestore + Storage rules)
+Ne pas préfixer ces variables avec `NEXT_PUBLIC_` : les clés Cloudinary doivent rester côté serveur. Si une clé a été partagée ou publiée, la révoquer dans Cloudinary et mettre à jour la configuration de l'hébergeur.
 
-Cloud Function & quotas
-- The functions/ directory contains an Express handler that:
-  - Verifies the client's Firebase ID token (so the client must sign in anonymously first)
-  - Enforces quotas per IP and per uploader (hour/day)
-  - Validates file size/type and uploads the image to Storage using the Admin SDK
-  - Creates a Firestore document in `photos` with metadata
+## Lancer l'application
 
-Security notes
-- Firestore/Storage rules are set to deny direct client writes to `photos`/`photos/*`. Uploads should go through the trusted Cloud Function.
-- The function currently makes uploaded files public (file.makePublic()). If you prefer private objects, change the function to generate signed URLs instead.
-- Cloud Functions see the client's IP (via X-Forwarded-For) to enforce IP quotas.
+```bash
+npm install
+npm run dev
+```
 
-Deploying the Cloud Function
-1. Install Firebase CLI and log in:
-   npm install -g firebase-tools
-   firebase login
-2. In your Firebase project directory, initialize functions (if not already):
-   firebase init functions
-   - choose JavaScript, and when prompted, you can copy the provided functions/* into the functions/ directory
-3. Deploy functions only:
-   firebase deploy --only functions
+`npm run build` vérifie la compilation de production et `npm run lint` lance ESLint.
 
-Note: if you use the provided functions code directly, ensure you set the function's entry point as `app` (the example uses `exports.app = app`). The deployment URL will be like `https://<region>-<project>.cloudfunctions.net/app/upload`.
+## API
 
-Costs & billing
-- Enforcing quotas and running functions is free for light use, but Cloud Functions and Storage may incur costs at scale. Enable billing if you anticipate higher traffic.
-
-If tu veux, je peux aussi:
-- Ajouter des tests ou une CI pour valider les règles
-- Mettre en place un système de modération (approuver avant publication)
-- Implementer signed URLs instead of makePublic()
+- `POST /api/upload` envoie une image vers Cloudinary, avec une limite de 50 Mo.
+- `GET /api/photos` liste les images de la galerie et fournit leurs URL de consultation.
+- `POST /api/manage-photos` permet à l'administrateur de modifier les catégories ou de supprimer plusieurs images.
+- `POST /api/delete` supprime une image depuis la galerie.
