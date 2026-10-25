@@ -242,7 +242,7 @@ export default function Home() {
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
 
         {/* Sidebar */}
-        <div className="sidebar-desktop" style={{ width: 230, flexShrink: 0, background: 'rgba(250,247,238,0.80)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRight: '1px solid rgba(234,216,138,0.6)', overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="sidebar-desktop" style={{ width: 230, flexShrink: 0, background: 'rgba(250,247,238,0.80)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderRight: '1px solid rgba(234,216,138,0.6)', overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
           {/* Welcome */}
           <div style={sideCard}>
@@ -262,7 +262,7 @@ export default function Home() {
                 onClick={() => setSelectedCat(c.id)}
                 style={selectedCat === c.id ? activeCatRow : catRow}
               >
-                <img src={CAT_ICONS[c.id]} alt="" style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0, mixBlendMode: 'multiply' }} />
+                <img src={CAT_ICONS[c.id]} alt="" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0, mixBlendMode: 'multiply' }} />
                 <span style={{ flex: 1 }}>{c.label}</span>
                 <span style={{ fontSize: 11, opacity: 0.7 }}>{countOf(c.id)}</span>
               </div>
@@ -273,21 +273,13 @@ export default function Home() {
           <a
             href={`/api/download-all${selectedCat !== 'all' ? `?category=${encodeURIComponent(selectedCat)}` : ''}`}
             download
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', borderRadius: 14, padding: '10px 14px', fontWeight: 700, fontSize: 13, textDecoration: 'none', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', textAlign: 'center' }}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', borderRadius: 14, padding: '13px 16px', fontWeight: 700, fontSize: 13, textDecoration: 'none', boxShadow: '0 4px 16px rgba(180,130,0,0.3)', textAlign: 'center' }}
           >
             Tout télécharger
             {selectedCat !== 'all' && (
               <span style={{ fontSize: 11, opacity: 0.85, fontWeight: 400, marginTop: 2 }}>{CATEGORIES.find(c => c.id === selectedCat)?.label}</span>
             )}
           </a>
-          <button
-            type="button"
-            onClick={() => setShowUploadModal(true)}
-            style={addPhotosButtonStyle}
-          >
-            <img src="/lemon-camera.svg" alt="" style={{ width: 22, height: 22 }} />
-            <span>Ajouter des photos</span>
-          </button>
         </div>
 
         {/* Main */}
@@ -369,13 +361,12 @@ export default function Home() {
 
       {/* ── FAB upload button ─────────────────────────────────────────────── */}
       <button
-        type="button"
         onClick={() => setShowUploadModal(true)}
+        title="Ajouter des photos"
         className="fab-upload"
-        style={{ ...addPhotosButtonStyle, position: 'fixed', bottom: 18, right: 16, zIndex: 20, width: 'auto', minHeight: 52, borderRadius: 999, padding: '0 16px', boxShadow: '0 6px 24px rgba(180,130,0,0.35)' }}
+        style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 20, background: 'linear-gradient(135deg, #D4A017, #B8860B)', border: 'none', borderRadius: '50%', width: 66, height: 66, cursor: 'pointer', boxShadow: '0 6px 24px rgba(180,130,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 0 }}
       >
-        <img src="/lemon-camera.svg" alt="" style={{ height: 24, width: 24 }} />
-        <span>Ajouter des photos</span>
+        <img src="/lemon-camera.svg" alt="Ajouter des photos" style={{ height: 46, width: 46 }} />
       </button>
 
       {/* ── Upload modal ──────────────────────────────────────────────────── */}
@@ -815,15 +806,14 @@ function EmptyState({ onUpload, catName }) {
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
-const sideCard = { background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 16, padding: '12px 14px', boxShadow: '0 2px 8px rgba(180,140,0,0.1)', border: '1px solid rgba(255,255,255,0.6)' }
+const sideCard = { background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 16, padding: '14px 16px', boxShadow: '0 2px 8px rgba(180,140,0,0.1)', border: '1px solid rgba(255,255,255,0.6)' }
 const sideTitle = { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#C9960A', margin: '0 0 10px' }
-const catRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', borderRadius: 10, cursor: 'pointer', fontSize: 13, color: '#5A3E00', marginBottom: 2 }
+const catRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 10, cursor: 'pointer', fontSize: 13, color: '#5A3E00', marginBottom: 2 }
 const activeCatRow = { ...catRow, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', fontWeight: 700 }
 
 const activeTab = { background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
 const inactiveTab = { background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 20, padding: '7px 16px', fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }
 const addMoreButton = { background: '#FFF9E6', color: '#7A5C20', border: '1px solid #EAD080', borderRadius: 18, padding: '6px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
-const addPhotosButtonStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', minHeight: 42, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 14, padding: '10px 14px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 4px 16px rgba(180,130,0,0.24)' }
 
 const overlay = { position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
 const modalCard = { background: 'white', borderRadius: 24, padding: '32px 28px', width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }
