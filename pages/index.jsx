@@ -318,6 +318,14 @@ export default function Home() {
               <span style={{ fontSize: 11, opacity: 0.85, fontWeight: 400, marginTop: 2 }}>{CATEGORIES.find(c => c.id === selectedCat)?.label}</span>
             )}
           </a>
+          <button
+            type="button"
+            onClick={() => setShowUploadModal(true)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', minHeight: 46, background: 'rgba(255,255,255,0.78)', border: '1px solid #EAD080', borderRadius: 12, color: '#7A5C20', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            <img src="/lemon-camera.svg" alt="" style={{ width: 24, height: 20, objectFit: 'contain' }} />
+            Ajouter des photos
+          </button>
         </div>
 
         {/* Main */}
