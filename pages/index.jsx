@@ -522,7 +522,9 @@ function uploadSinglePhoto(file, category, onProgress) {
 
       const isConfigurationError = data?.code === CLOUDINARY_CONFIGURATION_CODE
       const uploadError = new Error(
-        isConfigurationError ? CLOUDINARY_CONFIGURATION_MESSAGE : 'Échec de l’envoi'
+        isConfigurationError
+          ? CLOUDINARY_CONFIGURATION_MESSAGE
+          : data?.error || `Échec de l’envoi (HTTP ${xhr.status})`
       )
       uploadError.code = data?.code
       reject(uploadError)
