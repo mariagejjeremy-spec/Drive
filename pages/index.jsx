@@ -1,21 +1,25 @@
 import { useState, useEffect, useRef } from 'react'
 
 const CATEGORIES = [
-  { id: 'all',         label: 'Toutes' },
-  { id: 'Cérémonie',   label: 'Cérémonie' },
-  { id: 'Réception',   label: 'Réception' },
-  { id: 'Détails',     label: 'Détails' },
-  { id: 'Moments Fun', label: 'Moments Fun' },
-  { id: 'Autre',       label: 'Autre' },
+  { id: 'all', label: 'Toutes' },
+  { id: 'Cérémonies', label: 'Cérémonies' },
+  { id: 'Apéro', label: 'Apéro' },
+  { id: 'Repas', label: 'Repas' },
+  { id: 'Piste de danse', label: 'Piste de danse' },
+  { id: "La communauté de l'anneau", label: "La communauté de l'anneau" },
+  { id: 'Mariage civil', label: 'Mariage civil' },
+  { id: 'Autre', label: 'Autre' },
 ]
 
 const CAT_ICONS = {
-  all:           '/cat-all.png',
-  'Cérémonie':   '/cat-ceremonie.png',
-  'Réception':   '/cat-reception.png',
-  'Détails':     '/cat-details.png',
-  'Moments Fun': '/cat-moments.png',
-  'Autre':       '/cat-autre.png',
+  all: '/cat-all.png',
+  'Cérémonies': '/cat-ceremonie.png',
+  'Apéro': '/cat-reception.png',
+  'Repas': '/cat-repas.png',
+  'Piste de danse': '/cat-piste-danse.png',
+  "La communauté de l'anneau": '/cat-details.png',
+  'Mariage civil': '/cat-mariage-civil.png',
+  'Autre': '/cat-autre.png',
 }
 
 export default function Home() {
@@ -249,21 +253,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div style={sideCard}>
-            <p style={sideTitle}>Notre Mariage</p>
-            <div style={statRow}>
-              <span style={{ fontSize: 13, color: '#5A3E00' }}>Photos</span>
-              <span style={{ fontWeight: 700, color: '#C9960A', fontSize: 14 }}>{photos.length}</span>
-            </div>
-            {CATEGORIES.filter(c => c.id !== 'all').map(c => (
-              <div key={c.id} style={statRow}>
-                <span style={{ fontSize: 12, color: '#7A5C20' }}>{c.label}</span>
-                <span style={{ fontSize: 12, color: '#A08040' }}>{countOf(c.id)}</span>
-              </div>
-            ))}
-          </div>
-
           {/* Filter */}
           <div style={sideCard}>
             <p style={sideTitle}>Filtrer par</p>
@@ -383,8 +372,10 @@ export default function Home() {
       {/* ── Upload modal ──────────────────────────────────────────────────── */}
       {showUploadModal && (
         <UploadModal
+          initialCategory={selectedCat === 'all' ? 'Autre' : selectedCat}
           onClose={() => setShowUploadModal(false)}
-          onSuccess={() => { loadPhotos(); setShowUploadModal(false) }}
+          onUploaded={loadPhotos}
+          onSuccess={() => setShowUploadModal(false)}
         />
       )}
 
@@ -444,118 +435,266 @@ export default function Home() {
 
 // ── Upload modal ──────────────────────────────────────────────────────────────
 
-function UploadModal({ onClose, onSuccess }) {
-  const [file, setFile]       = useState(null)
-  const [preview, setPreview] = useState(null)
-  const [category, setCategory] = useState('Autre')
-  const [uploading, setUploading] = useState(false)
-  const [progress, setProgress]   = useState(0)
-  const [error, setError]         = useState('')
-  const inputRef  = useRef(null)
-  const cameraRef = useRef(null)
+const MAX_PHOTOS_PER_BATCH = 25
+const MAX_UPLOAD_FILE_SIZE = 50 * 1024 * 1024
 
-  function handleSelect(e) {
-    const f = e.target.files[0]
-    if (!f) return
-    setFile(f)
-    setPreview(URL.createObjectURL(f))
-  }
-
-  function doUpload() {
-    if (!file || uploading) return
-    setUploading(true)
-    setProgress(0)
-    setError('')
-
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('category', category)
+function uploadSinglePhoto(file, category, onProgress) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('category', category)
 
     const xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/upload')
-    xhr.upload.onprogress = ev => {
-      if (ev.lengthComputable) setProgress(Math.round(ev.loaded / ev.total * 100))
+    xhr.upload.onprogress = event => {
+      if (event.lengthComputable) onProgress(event.loaded, event.total)
     }
     xhr.onload = () => {
-      setUploading(false)
-      if (xhr.status < 300) {
-        if (preview) URL.revokeObjectURL(preview)
-        onSuccess()
-      } else {
-        setError("Erreur lors de l'upload. Réessayez.")
-      }
+      if (xhr.status < 300) resolve()
+      else reject(new Error('Échec de l’envoi'))
     }
-    xhr.onerror = () => { setUploading(false); setError('Erreur réseau.') }
-    xhr.send(fd)
+    xhr.onerror = () => reject(new Error('Erreur réseau'))
+    xhr.send(formData)
+  })
+}
+
+function UploadModal({ initialCategory = 'Autre', onClose, onSuccess, onUploaded }) {
+  const [fileItems, setFileItems] = useState([])
+  const [category, setCategory] = useState(initialCategory)
+  const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [currentFile, setCurrentFile] = useState(0)
+  const [error, setError] = useState('')
+  const inputRef = useRef(null)
+  const cameraRef = useRef(null)
+  const previewsRef = useRef(new Set())
+
+  useEffect(() => () => {
+    previewsRef.current.forEach(preview => URL.revokeObjectURL(preview))
+  }, [])
+
+  function handleSelect(event) {
+    const selectedFiles = Array.from(event.target.files || [])
+    event.target.value = ''
+    if (!selectedFiles.length) return
+
+    const issues = []
+    const validFiles = []
+
+    selectedFiles.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        issues.push(`${file.name} n’est pas une image.`)
+      } else if (file.size === 0) {
+        issues.push(`${file.name} est vide.`)
+      } else if (file.size > MAX_UPLOAD_FILE_SIZE) {
+        issues.push(`${file.name} dépasse la limite de 50 Mo.`)
+      } else {
+        validFiles.push(file)
+      }
+    })
+
+    const availableSlots = Math.max(0, MAX_PHOTOS_PER_BATCH - fileItems.length)
+    const acceptedFiles = validFiles.slice(0, availableSlots)
+    if (acceptedFiles.length < validFiles.length) {
+      issues.push(`Maximum ${MAX_PHOTOS_PER_BATCH} photos par envoi.`)
+    }
+
+    const newItems = acceptedFiles.map((file, index) => {
+      const preview = URL.createObjectURL(file)
+      previewsRef.current.add(preview)
+      return {
+        id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`,
+        file,
+        preview,
+      }
+    })
+
+    if (newItems.length) setFileItems(current => [...current, ...newItems])
+    setError(issues.join(' '))
+  }
+
+  function removeFile(itemId) {
+    const item = fileItems.find(fileItem => fileItem.id === itemId)
+    if (item) {
+      URL.revokeObjectURL(item.preview)
+      previewsRef.current.delete(item.preview)
+    }
+    setFileItems(current => current.filter(fileItem => fileItem.id !== itemId))
+    setError('')
+  }
+
+  async function doUpload() {
+    if (!fileItems.length || uploading) return
+
+    const selectedItems = [...fileItems]
+    const totalBytes = selectedItems.reduce((total, item) => total + item.file.size, 0)
+    let completedBytes = 0
+    const uploadedItems = []
+    const failedItems = []
+
+    setUploading(true)
+    setProgress(0)
+    setCurrentFile(0)
+    setError('')
+
+    for (const [index, item] of selectedItems.entries()) {
+      setCurrentFile(index + 1)
+      try {
+        await uploadSinglePhoto(item.file, category, (loaded, total) => {
+          const currentFileBytes = total ? (loaded / total) * item.file.size : 0
+          setProgress(Math.min(100, Math.round(((completedBytes + currentFileBytes) / totalBytes) * 100)))
+        })
+        uploadedItems.push(item)
+      } catch {
+        failedItems.push(item)
+      }
+      completedBytes += item.file.size
+      setProgress(Math.min(100, Math.round((completedBytes / totalBytes) * 100)))
+    }
+
+    if (uploadedItems.length) await onUploaded()
+    setUploading(false)
+
+    if (failedItems.length) {
+      uploadedItems.forEach(item => {
+        URL.revokeObjectURL(item.preview)
+        previewsRef.current.delete(item.preview)
+      })
+      setFileItems(failedItems)
+      const successMessage = uploadedItems.length
+        ? `${uploadedItems.length} photo${uploadedItems.length > 1 ? 's' : ''} envoyée${uploadedItems.length > 1 ? 's' : ''}. `
+        : ''
+      const failureMessage = failedItems.length === 1
+        ? '1 photo n’a pas pu être envoyée. Vous pouvez réessayer.'
+        : `${failedItems.length} photos n’ont pas pu être envoyées. Vous pouvez réessayer.`
+      setError(successMessage + failureMessage)
+      return
+    }
+
+    onSuccess()
   }
 
   return (
     <div style={overlay} onClick={uploading ? undefined : onClose}>
-      <div style={{ ...modalCard, maxWidth: 420 }} onClick={e => e.stopPropagation()}>
-
-        {/* Two selection cards — hidden once a photo is chosen */}
-        {!preview ? (
+      <div style={{ ...modalCard, maxWidth: 420 }} onClick={event => event.stopPropagation()}>
+        {fileItems.length === 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-            <img
-              src="/upload-gallery.png"
-              alt="Ajouter une photo"
+            <button
+              type="button"
+              aria-label="Choisir plusieurs photos dans la galerie"
               onClick={() => inputRef.current?.click()}
-              style={{ width: '100%', height: 'auto', cursor: 'pointer', borderRadius: 16, display: 'block' }}
-            />
-            <img
-              src="/upload-camera.png"
-              alt="Prendre une photo"
+              style={{ border: 0, padding: 0, background: 'transparent', cursor: 'pointer' }}
+            >
+              <img src="/upload-gallery.png" alt="" style={{ width: '100%', height: 'auto', borderRadius: 16, display: 'block' }} />
+            </button>
+            <button
+              type="button"
+              aria-label="Prendre une photo"
               onClick={() => cameraRef.current?.click()}
-              style={{ width: '100%', height: 'auto', cursor: 'pointer', borderRadius: 16, display: 'block' }}
-            />
+              style={{ border: 0, padding: 0, background: 'transparent', cursor: 'pointer' }}
+            >
+              <img src="/upload-camera.png" alt="" style={{ width: '100%', height: 'auto', borderRadius: 16, display: 'block' }} />
+            </button>
           </div>
         ) : (
           <div style={{ marginBottom: 16 }}>
-            <img src={preview} alt="" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', display: 'block', borderRadius: 16 }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
+              <p style={{ margin: 0, color: '#7A5C20', fontSize: 13, fontWeight: 700 }}>
+                {fileItems.length} photo{fileItems.length > 1 ? 's' : ''} sélectionnée{fileItems.length > 1 ? 's' : ''}
+              </p>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} style={addMoreButton}>
+                  + Galerie
+                </button>
+                <button type="button" onClick={() => cameraRef.current?.click()} disabled={uploading} style={addMoreButton}>
+                  + Photo
+                </button>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, maxHeight: 190, overflowY: 'auto' }}>
+              {fileItems.map(item => (
+                <div key={item.id} style={{ position: 'relative', minWidth: 0 }}>
+                  <img src={item.preview} alt="" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block', borderRadius: 10 }} />
+                  {!uploading && (
+                    <button
+                      type="button"
+                      aria-label={`Retirer ${item.file.name}`}
+                      onClick={() => removeFile(item.id)}
+                      style={{ position: 'absolute', top: 4, right: 4, width: 24, height: 24, padding: 0, border: 0, borderRadius: '50%', background: 'rgba(45,31,0,0.78)', color: 'white', fontSize: 17, lineHeight: '24px', cursor: 'pointer' }}
+                    >
+                      ×
+                    </button>
+                  )}
+                  <p title={item.file.name} style={{ margin: '4px 0 0', color: '#7A5C20', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.file.name}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p style={{ margin: '8px 0 0', color: '#A08040', fontSize: 11 }}>
+              Jusqu’à {MAX_PHOTOS_PER_BATCH} photos, 50 Mo maximum par photo.
+            </p>
           </div>
         )}
 
-        <input ref={inputRef}  type="file" accept="image/*"                     onChange={handleSelect} style={{ display: 'none' }} />
+        <input ref={inputRef} type="file" accept="image/*" multiple onChange={handleSelect} style={{ display: 'none' }} />
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} />
 
-        {/* Category */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 700, color: '#7A5C20', display: 'block', marginBottom: 6 }}>
+          <label htmlFor="upload-category" style={{ fontSize: 13, fontWeight: 700, color: '#7A5C20', display: 'block', marginBottom: 6 }}>
             Catégorie
           </label>
           <select
+            id="upload-category"
             value={category}
-            onChange={e => setCategory(e.target.value)}
+            onChange={event => setCategory(event.target.value)}
+            disabled={uploading}
             style={{ width: '100%', border: '1.5px solid #EAD080', borderRadius: 12, padding: '12px 14px', fontSize: 14, color: '#2D1F00', background: '#FDFBF2', outline: 'none', cursor: 'pointer', fontFamily: "'Lato', sans-serif" }}
           >
             {CATEGORIES.filter(c => c.id !== 'all').map(c => (
               <option key={c.id} value={c.id}>{c.label}</option>
             ))}
           </select>
+          <p style={{ margin: '6px 0 0', color: '#A08040', fontSize: 11 }}>
+            Cette catégorie s’appliquera à toutes les photos sélectionnées.
+          </p>
         </div>
 
-        {/* Progress */}
         {uploading && (
           <div style={{ marginBottom: 14 }}>
-            <div style={{ height: 6, background: '#EAD080', borderRadius: 3, overflow: 'hidden' }}>
+            <div
+              role="progressbar"
+              aria-label="Progression de l’envoi des photos"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+              style={{ height: 6, background: '#EAD080', borderRadius: 3, overflow: 'hidden' }}
+            >
               <div style={{ height: 6, width: `${progress}%`, background: 'linear-gradient(90deg, #D4A017, #B8860B)', borderRadius: 3, transition: 'width 0.3s' }} />
             </div>
-            <p style={{ fontSize: 12, color: '#A08040', textAlign: 'center', marginTop: 6 }}>{progress}% — envoi en cours...</p>
+            <p aria-live="polite" style={{ fontSize: 12, color: '#A08040', textAlign: 'center', margin: '6px 0 0' }}>
+              Photo {currentFile} sur {fileItems.length} · {progress}% — envoi en cours
+            </p>
           </div>
         )}
 
-        {error && <p style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', margin: '0 0 10px' }}>{error}</p>}
+        {error && <p role="alert" style={{ color: '#DC2626', fontSize: 13, textAlign: 'center', margin: '0 0 10px' }}>{error}</p>}
 
         <button
+          type="button"
           onClick={doUpload}
-          disabled={!file || uploading}
-          style={{ width: '100%', background: file && !uploading ? 'linear-gradient(135deg, #D4A017, #B8860B)' : '#E0D0A0', color: 'white', border: 'none', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: file && !uploading ? 'pointer' : 'not-allowed', marginBottom: 10, boxShadow: file && !uploading ? '0 4px 16px rgba(180,130,0,0.3)' : 'none' }}
+          disabled={!fileItems.length || uploading}
+          style={{ width: '100%', background: fileItems.length && !uploading ? 'linear-gradient(135deg, #D4A017, #B8860B)' : '#E0D0A0', color: 'white', border: 'none', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: fileItems.length && !uploading ? 'pointer' : 'not-allowed', marginBottom: 10, boxShadow: fileItems.length && !uploading ? '0 4px 16px rgba(180,130,0,0.3)' : 'none' }}
         >
-          {uploading ? `⬆ ${progress}%` : 'Uploader'}
+          {uploading
+            ? `Envoi ${currentFile}/${fileItems.length} · ${progress}%`
+            : fileItems.length
+              ? `Uploader ${fileItems.length} photo${fileItems.length > 1 ? 's' : ''}`
+              : 'Sélectionner des photos'}
         </button>
 
         {!uploading && (
-          <button onClick={onClose} style={cancelBtn}>Annuler</button>
+          <button type="button" onClick={onClose} style={cancelBtn}>Annuler</button>
         )}
       </div>
     </div>
@@ -669,12 +808,12 @@ function EmptyState({ onUpload, catName }) {
 
 const sideCard = { background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 16, padding: '14px 16px', boxShadow: '0 2px 8px rgba(180,140,0,0.1)', border: '1px solid rgba(255,255,255,0.6)' }
 const sideTitle = { fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: '#C9960A', margin: '0 0 10px' }
-const statRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #F5EDCC' }
 const catRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: 10, cursor: 'pointer', fontSize: 13, color: '#5A3E00', marginBottom: 2 }
 const activeCatRow = { ...catRow, background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', fontWeight: 700 }
 
 const activeTab = { background: 'linear-gradient(135deg, #D4A017, #B8860B)', color: 'white', border: 'none', borderRadius: 20, padding: '8px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
 const inactiveTab = { background: 'white', color: '#7A5C20', border: '1.5px solid #EAD080', borderRadius: 20, padding: '7px 16px', fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }
+const addMoreButton = { background: '#FFF9E6', color: '#7A5C20', border: '1px solid #EAD080', borderRadius: 18, padding: '6px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
 
 const overlay = { position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
 const modalCard = { background: 'white', borderRadius: 24, padding: '32px 28px', width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }
