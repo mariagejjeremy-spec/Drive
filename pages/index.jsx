@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 
+const CLOUDINARY_CONFIGURATION_CODE = 'CLOUDINARY_CONFIGURATION'
+const CLOUDINARY_CONFIGURATION_MESSAGE =
+  'La configuration Cloudinary est invalide. Vérifiez le Cloud name et les clés API.'
+
 const CATEGORIES = [
   { id: 'all', label: 'Toutes' },
   { id: 'Cérémonies', label: 'Cérémonies' },
@@ -31,6 +35,7 @@ export default function Home() {
 
   const [photos, setPhotos]               = useState([])
   const [loadingPhotos, setLoadingPhotos] = useState(false)
+  const [photosError, setPhotosError]     = useState('')
   const [selectedCat, setSelectedCat]     = useState('all')
 
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -72,11 +77,20 @@ export default function Home() {
   async function loadPhotos() {
     setLoadingPhotos(true)
     try {
-      const res  = await fetch('/api/photos')
+      const res = await fetch('/api/photos')
       const data = await res.json()
       setPhotos(data.photos || [])
-    } catch { /* silent */ }
-    finally { setLoadingPhotos(false) }
+      setPhotosError(
+        data.code === CLOUDINARY_CONFIGURATION_CODE
+          ? CLOUDINARY_CONFIGURATION_MESSAGE
+          : res.ok ? '' : data.error || 'Impossible de charger les photos.'
+      )
+    } catch {
+      setPhotos([])
+      setPhotosError('Impossible de charger les photos.')
+    } finally {
+      setLoadingPhotos(false)
+    }
   }
 
   async function handleLogin(e) {
@@ -350,6 +364,13 @@ export default function Home() {
           <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 28px 100px' }}>
             {loadingPhotos ? (
               <SkeletonGrid />
+            ) : photosError ? (
+              <div
+                role="alert"
+                style={{ border: '1px solid rgba(201,150,10,0.35)', borderRadius: 14, background: 'rgba(255,250,236,0.92)', color: '#7A5C20', padding: 16, fontSize: 14, lineHeight: 1.5 }}
+              >
+                {photosError}
+              </div>
             ) : filtered.length === 0 ? (
               <EmptyState onUpload={() => setShowUploadModal(true)} catName={CATEGORIES.find(c => c.id === selectedCat)?.label} />
             ) : (
@@ -450,8 +471,24 @@ function uploadSinglePhoto(file, category, onProgress) {
       if (event.lengthComputable) onProgress(event.loaded, event.total)
     }
     xhr.onload = () => {
-      if (xhr.status < 300) resolve()
-      else reject(new Error('Échec de l’envoi'))
+      if (xhr.status < 300) {
+        resolve()
+        return
+      }
+
+      let data = null
+      try {
+        data = JSON.parse(xhr.responseText)
+      } catch {
+        data = null
+      }
+
+      const isConfigurationError = data?.code === CLOUDINARY_CONFIGURATION_CODE
+      const uploadError = new Error(
+        isConfigurationError ? CLOUDINARY_CONFIGURATION_MESSAGE : 'Échec de l’envoi'
+      )
+      uploadError.code = data?.code
+      reject(uploadError)
     }
     xhr.onerror = () => reject(new Error('Erreur réseau'))
     xhr.send(formData)
@@ -531,6 +568,7 @@ function UploadModal({ initialCategory = 'Autre', onClose, onSuccess, onUploaded
     let completedBytes = 0
     const uploadedItems = []
     const failedItems = []
+    let cloudinaryConfigurationMessage = ''
 
     setUploading(true)
     setProgress(0)
@@ -545,8 +583,11 @@ function UploadModal({ initialCategory = 'Autre', onClose, onSuccess, onUploaded
           setProgress(Math.min(100, Math.round(((completedBytes + currentFileBytes) / totalBytes) * 100)))
         })
         uploadedItems.push(item)
-      } catch {
+      } catch (uploadError) {
         failedItems.push(item)
+        if (uploadError?.code === CLOUDINARY_CONFIGURATION_CODE) {
+          cloudinaryConfigurationMessage = CLOUDINARY_CONFIGURATION_MESSAGE
+        }
       }
       completedBytes += item.file.size
       setProgress(Math.min(100, Math.round((completedBytes / totalBytes) * 100)))
@@ -564,9 +605,9 @@ function UploadModal({ initialCategory = 'Autre', onClose, onSuccess, onUploaded
       const successMessage = uploadedItems.length
         ? `${uploadedItems.length} photo${uploadedItems.length > 1 ? 's' : ''} envoyée${uploadedItems.length > 1 ? 's' : ''}. `
         : ''
-      const failureMessage = failedItems.length === 1
+      const failureMessage = cloudinaryConfigurationMessage || (failedItems.length === 1
         ? '1 photo n’a pas pu être envoyée. Vous pouvez réessayer.'
-        : `${failedItems.length} photos n’ont pas pu être envoyées. Vous pouvez réessayer.`
+        : `${failedItems.length} photos n’ont pas pu être envoyées. Vous pouvez réessayer.`)
       setError(successMessage + failureMessage)
       return
     }

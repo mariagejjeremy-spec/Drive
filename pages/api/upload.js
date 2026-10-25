@@ -1,19 +1,12 @@
-import cloudinary from 'cloudinary'
 import formidable from 'formidable'
+import {
+  createCloudinaryErrorResponse,
+  getCloudinary,
+  logSanitizedCloudinaryError,
+} from '../../lib/cloudinary'
 
 export const config = {
   api: { bodyParser: false },
-}
-
-const cl = cloudinary.v2
-
-function getCloudinary() {
-  cl.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-  return cl
 }
 
 export default async function handler(req, res) {
@@ -37,7 +30,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ url: result.secure_url, id: result.public_id })
   } catch (err) {
-    console.error('[upload]', err)
-    return res.status(500).json({ error: "Échec de l'upload" })
+    logSanitizedCloudinaryError('upload', err)
+    const failure = createCloudinaryErrorResponse(err, "Échec de l'upload")
+    return res.status(failure.status).json(failure.body)
   }
 }

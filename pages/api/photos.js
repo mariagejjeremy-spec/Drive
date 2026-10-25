@@ -1,15 +1,8 @@
-import cloudinary from 'cloudinary'
-
-const cl = cloudinary.v2
-
-function getCloudinary() {
-  cl.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-  return cl
-}
+import {
+  createCloudinaryErrorResponse,
+  getCloudinary,
+  logSanitizedCloudinaryError,
+} from '../../lib/cloudinary'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end()
@@ -45,7 +38,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ photos })
   } catch (err) {
-    console.error('[photos]', err)
-    return res.status(500).json({ photos: [], error: 'Impossible de charger les photos.' })
+    logSanitizedCloudinaryError('photos', err)
+    const failure = createCloudinaryErrorResponse(err, 'Impossible de charger les photos.')
+    return res.status(failure.status).json({ photos: [], ...failure.body })
   }
 }

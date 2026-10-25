@@ -1,18 +1,11 @@
-import cloudinary from 'cloudinary'
 import archiver from 'archiver'
 import https from 'https'
 import http from 'http'
-
-const cl = cloudinary.v2
-
-function getCloudinary() {
-  cl.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  })
-  return cl
-}
+import {
+  createCloudinaryErrorResponse,
+  getCloudinary,
+  logSanitizedCloudinaryError,
+} from '../../lib/cloudinary'
 
 function fetchStream(url) {
   return new Promise((resolve, reject) => {
@@ -67,14 +60,17 @@ export default async function handler(req, res) {
         archive.append(stream, { name: filename })
         await new Promise(resolve => stream.on('end', resolve))
       } catch (err) {
-        console.error('[download-all] skip', r.public_id, err.message)
+        logSanitizedCloudinaryError('download-all:skip', err)
       }
     }
 
     await archive.finalize()
   } catch (err) {
-    console.error('[download-all]', err)
-    if (!res.headersSent) res.status(500).json({ error: 'Erreur lors de la création du ZIP.' })
+    logSanitizedCloudinaryError('download-all', err)
+    if (!res.headersSent) {
+      const failure = createCloudinaryErrorResponse(err, 'Erreur lors de la création du ZIP.')
+      res.status(failure.status).json(failure.body)
+    }
   }
 }
 

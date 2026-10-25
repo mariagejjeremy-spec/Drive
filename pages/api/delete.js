@@ -1,7 +1,9 @@
 import crypto from 'crypto'
-import cloudinary from 'cloudinary'
-
-const cl = cloudinary.v2
+import {
+  createCloudinaryErrorResponse,
+  getCloudinary,
+  logSanitizedCloudinaryError,
+} from '../../lib/cloudinary'
 
 function verifyToken(token) {
   const expected = crypto
@@ -23,16 +25,12 @@ export default async function handler(req, res) {
   if (!publicId) return res.status(400).json({ error: 'publicId manquant' })
 
   try {
-    cl.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
-    })
-
-    await cl.uploader.destroy(publicId, { resource_type: 'image' })
+    const cld = getCloudinary()
+    await cld.uploader.destroy(publicId, { resource_type: 'image' })
     return res.status(200).json({ ok: true })
   } catch (err) {
-    console.error('[delete]', err)
-    return res.status(500).json({ error: 'Suppression échouée' })
+    logSanitizedCloudinaryError('delete', err)
+    const failure = createCloudinaryErrorResponse(err, 'Suppression échouée')
+    return res.status(failure.status).json(failure.body)
   }
 }
